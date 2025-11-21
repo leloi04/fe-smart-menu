@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom"
-import AppHeader from "components/layout/app.header"
+import AppHeader from "@/components/layout/customers/customer.header"
+import AppFooter from "./components/layout/customers/customer.footer"
 
 function Layout() {
 
@@ -7,6 +8,7 @@ function Layout() {
     <>
       <AppHeader  />
       <Outlet />
+      <AppFooter /> 
     </>
   )
 }

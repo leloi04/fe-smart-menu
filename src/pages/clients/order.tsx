@@ -178,23 +178,7 @@ const OrderPage = () => {
   if (step === "order" && userInfo && tableData) {
     return (
       <div>
-        <header className="flex justify-between items-center bg-white shadow p-4">
-          <h1 className="font-semibold text-gray-700">
-            Bàn {tableData.tableNumber} – {userInfo.name}
-          </h1>
-          <button
-            onClick={() => {
-              localStorage.removeItem("userInfo");
-              setStep("choose");
-              setUserInfo(null);
-            }}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
-          >
-            Thoát
-          </button>
-        </header>
-
-        <MenuOrder currentOrderId={currentOrderId} tableData={tableData}/>
+        <MenuOrder setStep={setStep} setUserInfo={setUserInfo} userInfo={userInfo} currentOrderId={currentOrderId} tableData={tableData}/>
       </div>
     );
   }

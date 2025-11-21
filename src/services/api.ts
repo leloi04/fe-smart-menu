@@ -1,12 +1,42 @@
 import axios from "services/axios.customize";
 
+// Account API Service
+const loginAPI = (username: string, password: string) => {
+  const urlBackend = "/auth/login";
+  return axios.post<IBackendRes<ILogin>>(urlBackend, { username, password });
+};
+
+const fetchAccountAPI = () => {
+  const urlBackend = "/auth/account";
+  return axios.get<IBackendRes<IFetchAccount>>(urlBackend);
+};
+
+const logoutAPI = () => {
+  const urlBackend = "/auth/logout";
+  return axios.post<IBackendRes<ILogin>>(urlBackend);
+};
+
+const registerAPI = (
+  name: string,
+  email: string,
+  password: string,
+  phone: string
+) => {
+  const urlBackend = "/auth/register";
+  return axios.post<IBackendRes<IRegister>>(urlBackend, {
+    name,
+    email,
+    password,
+    phone,
+  });
+};
+
 // User API service
 const getUserAPI = (query: string) => {
   const urlBackend = `/users?${query}`;
   return axios.get<IBackendRes<IModalPaginate<IUserModal>>>(urlBackend);
 };
 
-// User API service
 const getMenuAPI = (query: string) => {
   const urlBackend = `/menus?${query}`;
   return axios.get<IBackendRes<IModalPaginate<IMenuModal>>>(urlBackend);
@@ -72,4 +102,8 @@ export {
   getTableAPI,
   addCustomerToOrderAPI,
   getOrderAPI,
+  loginAPI,
+  logoutAPI,
+  registerAPI,
+  fetchAccountAPI,
 };

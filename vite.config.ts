@@ -8,6 +8,7 @@ export default defineConfig({
   plugins: [react(), tsconfigPaths(), tailwindcss()],
   assetsInclude: ["**/*.xlsx"],
   server: {
+    host: true,
     port: 3000,
   },
 });

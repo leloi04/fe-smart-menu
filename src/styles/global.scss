@@ -1,9 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+.button-ui.ant-btn {
+  background-color: #FF6B35 !important;
+  color: white !important;
+  border-color: #FF6B35 !important;
+}
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+.button-ui.ant-btn:hover {
+  background-color: #E85A27 !important;
+  border-color: #E85A27 !important;
+  color: white !important;
 }
