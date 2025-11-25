@@ -19,6 +19,7 @@ import { LoginPage } from './pages/clients/auth/login';
 import { RegisterPage } from './pages/clients/auth/register';
 import '@ant-design/v5-patch-for-react-19'; 
 import { AppProvider } from './components/context/app.context';
+import ChefKitchenPage from './pages/chefs/chef';
 
 let router = createBrowserRouter([
   {
@@ -36,6 +37,7 @@ let router = createBrowserRouter([
       { path: "/register", element: <RegisterPage /> },
       { path: "/payment", element: <PaymentPage /> },
       { path: "/tables/:tableNumber", element: <OrderPage /> },
+      { path: "/chef", element: <ChefKitchenPage /> },
 
 ]);
 

@@ -8,7 +8,7 @@ const instance = axios.create({
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
-const PUBLIC_PATHS = ["/tables"]; // 👈 tất cả routes bắt đầu bằng /tables là PUBLIC
+const PUBLIC_PATHS = ["/tables", "/chef"]; // 👈 tất cả routes bắt đầu bằng /tables là PUBLIC
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((promise) => {

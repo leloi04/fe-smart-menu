@@ -9,3 +9,5 @@
   border-color: #E85A27 !important;
   color: white !important;
 }
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
