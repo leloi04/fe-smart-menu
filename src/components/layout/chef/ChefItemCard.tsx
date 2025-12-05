@@ -1,22 +1,32 @@
-import type { OrderItem } from '@/types';
-import { formatTime, getKitchenAreaLabel } from '@/utils/helpers';
+// ChefItemCard.tsx
 import { Card, Button, Tag, Space } from 'antd';
 import { Clock, PlayCircle, CheckCircle, Utensils } from 'lucide-react';
+import { formatTime, getKitchenAreaLabel } from '@/utils/helpers';
+import type { KitchenArea } from '@/types';
 
 interface ChefItemCardProps {
-  item: OrderItem & {
-    orderId: string;
-    orderType: string;
-    tableNumber?: number;
-    customerName?: string;
+  item: {
+    menuItemId: string;
+    name: string;
+    variant?: { size: string; price: number };
+    toppings: { name: string; price: number }[];
+    quantity: number;
+    notes?: string;
+    kitchenArea: KitchenArea;
+    startTime?: Date;
+    orderType: 'dine-in' | 'online';
+    tableNumber?: string;
+    customers?: { name: string }[];
+    dataKey?: string;
+    batchId?: string | null;
+    timestamp?: string;
   };
-  onStart?: (orderId: string, itemId: string) => void;
-  onComplete: (orderId: string, itemId: string) => void;
 }
 
-export default function ChefItemCard({ item, onStart, onComplete }: ChefItemCardProps) {
-  const orderRef =
-    item.orderType === 'dine-in' ? `Bàn ${item.tableNumber}` : item.customerName || 'Online';
+export default function ChefItemCard({ item }: ChefItemCardProps) {
+  const orderRef = item.tableNumber
+    ? `Bàn ${item.tableNumber}`
+    : item.customers?.map((c) => c.name).join(', ') || 'Online';
 
   return (
     <Card
@@ -31,21 +41,32 @@ export default function ChefItemCard({ item, onStart, onComplete }: ChefItemCard
                 {orderRef}
               </Tag>
               <Tag color="purple">{getKitchenAreaLabel(item.kitchenArea)}</Tag>
+              {item.batchId && <Tag color="green">Món gọi thêm</Tag>}
             </div>
 
             <div className="text-lg font-bold text-gray-800 mb-1">
               {item.name}
-              {item.variant && <span className="text-sm font-normal text-gray-500"> ({item.variant})</span>}
+              {item.variant && (
+                <span className="text-sm font-normal text-gray-500">
+                  {' '}
+                  ({item.variant.size})
+                </span>
+              )}
             </div>
 
             <div className="text-gray-600 mb-2">
-              <span className="font-semibold text-xl text-orange-500">x{item.qty}</span>
+              <span className="font-semibold text-xl text-orange-500">
+                x{item.quantity}
+              </span>
             </div>
 
             {item.toppings.length > 0 && (
               <div className="text-sm text-gray-600 mb-2">
                 <Utensils size={14} className="inline mr-1" />
-                Topping: <span className="font-medium">{item.toppings.join(', ')}</span>
+                Topping:{' '}
+                <span className="font-medium">
+                  {item.toppings.map((t: any) => t.name).join(', ')}
+                </span>
               </div>
             )}
 
@@ -57,27 +78,19 @@ export default function ChefItemCard({ item, onStart, onComplete }: ChefItemCard
           </div>
         </div>
 
-        {item.startTime && (
+        {item.timestamp && (
           <div className="flex items-center gap-1 text-sm text-gray-500 bg-blue-50 px-2 py-1 rounded">
             <Clock size={14} />
-            <span>Bắt đầu: {formatTime(item.startTime)}</span>
+            <span>Bắt đầu: {formatTime(new Date(item.timestamp))}</span>
           </div>
         )}
 
         <Space className="w-full justify-end">
-          {onStart && !item.startTime && (
-            <Button
-              icon={<PlayCircle size={16} />}
-              onClick={() => onStart(item.orderId, item.id)}
-            >
-              Bắt đầu
-            </Button>
-          )}
           <Button
             type="primary"
             icon={<CheckCircle size={16} />}
             className="bg-green-500 hover:bg-green-600"
-            onClick={() => onComplete(item.orderId, item.id)}
+            onClick={() => console.log('Complete clicked', item)}
           >
             Hoàn thành
           </Button>

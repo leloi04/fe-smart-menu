@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { getMenuAPI } from "@/services/api";
 import { s } from "framer-motion/client";
+import type { KitchenArea } from "@/types/global";
+import { message } from "antd";
+import OrderDetailModal from "./modal.order";
 
 type Variant = { size: string; price: number; _id: string };
 type Topping = { name: string; price: number; _id: string };
@@ -15,6 +18,7 @@ type MenuItem = {
   status: "available" | "out_of_stock";
   variants: Variant[];
   toppings: Topping[];
+  kitchenArea: KitchenArea;
 };
 
 interface IProps {
@@ -33,7 +37,7 @@ interface IProps {
   } | null>>;
 }
 
-type OrderItem = { quantity: number; selectedVariant?: string; selectedToppings: string[] };
+type OrderItem = { quantity: number; selectedVariant?: string; selectedToppings: string[]; kitchenArea?: KitchenArea };
 
 const socket: Socket = io(import.meta.env.VITE_BACKEND_URL || "http://localhost:8081");
 
@@ -44,6 +48,7 @@ const MenuOrder = (props: IProps) => {
   const [isUserAction, setIsUserAction] = useState(false);
   const [realtimeOrder, setRealtimeOrder] = useState<any>(null);
   const [firstOrder, setFirstOrder] = useState<any>(null);
+  const [addOrders, setAddOrders] = useState<any[]>([]);
   const tableId = tableData?.tableId || "";
   const tableNumber = tableData?.tableNumber || "";
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -54,9 +59,24 @@ const MenuOrder = (props: IProps) => {
     "pending_confirmation" | "processing" | "completed" | "draft"
   >("draft");
   const [paymentStatus, setPaymentStatus] = useState<"unpaid" | "paid" | null>(null);
-
-  // UI state for View Order panel
   const [showOrderPanel, setShowOrderPanel] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<IOrderModal | null>(null);
+
+  const handleOpenModal = (order: IOrderModal) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirm = () => {
+    handleSendOrder(true);
+    setIsModalOpen(false);
+  };
+
+  const handleCancelOrder = () => {
+    setIsModalOpen(false);
+  };
+
 
   // ======================
   // 1️⃣ Load menu
@@ -78,6 +98,7 @@ const MenuOrder = (props: IProps) => {
                 quantity: 0,
                 selectedVariant: item.variants?.[0]?._id,
                 selectedToppings: [],
+                kitchenArea: item.kitchenArea,
               };
             }
           });
@@ -111,7 +132,15 @@ const MenuOrder = (props: IProps) => {
     });
 
     socket.on("orderUpdated", (data) => setRealtimeOrder(data));
-    socket.on("orderStatusChanged", (status) => setProgressStatus(status));
+    socket.on("orderStatusChanged", (status) => {
+      setProgressStatus(status)
+      if (status === "draft") {
+        message.info("Order của bạn đã bị hủy. Vui lòng gọi món lại.");
+      } else if (status === "processing") {
+        message.success("Order của bạn đang được xử lý!");
+      }
+    }
+  );
     socket.on("currentOrderProcessing", (status) => setProgressStatus(status));
 
     const handleMenuStatusUpdate = (updatedItem: any) => {
@@ -123,12 +152,23 @@ const MenuOrder = (props: IProps) => {
     };
     socket.on("menuStatusUpdated", handleMenuStatusUpdate);
 
+    socket.on("addOrders", (data) => {
+      setAddOrders(data);
+      setTotalPriceAddItems(data.reduce((sum: any, batch: any) => sum + batch.totalPrice, 0));
+    });
+
+    socket.on("addItemsOrder", (data) => {
+      setAddOrders((prev) => [...prev, data]);
+    })
+
     return () => {
       socket.off("currentOrder");
       socket.off("firstOrder");
       socket.off("orderUpdated");
       socket.off("orderStatusChanged");
       socket.off("currentOrderProcessing");
+      socket.off("addOrders");
+      socket.off("addItemsOrder");
       socket.off("menuStatusUpdated", handleMenuStatusUpdate);
     };
   }, [tableNumber, tableId]);
@@ -151,6 +191,7 @@ const MenuOrder = (props: IProps) => {
         quantity: 0,
         selectedVariant: item.variants?.[0]?._id,
         selectedToppings: [],
+        kitchenArea: item.kitchenArea,
       };
     });
 
@@ -160,6 +201,7 @@ const MenuOrder = (props: IProps) => {
         quantity: oi.quantity,
         selectedVariant: oi.variant?._id,
         selectedToppings: oi.toppings?.map((t: any) => t._id) || [],
+        kitchenArea: oi.kitchenArea,
       };
     });
 
@@ -194,6 +236,7 @@ const MenuOrder = (props: IProps) => {
           quantity: o.quantity,
           variant: variant ? { _id: variant._id, size: variant.size, price: variant.price } : null,
           toppings: toppings.map((t) => ({ _id: t._id, name: t.name, price: t.price })),
+          kitchenArea: o.kitchenArea || item.kitchenArea,
         };
       })
       .filter(Boolean) as any[];
@@ -272,6 +315,7 @@ const MenuOrder = (props: IProps) => {
           quantity: o.quantity,
           variant: variant ? { _id: variant._id, size: variant.size, price: variant.price } : null,
           toppings: toppings.map((t) => ({ _id: t._id, name: t.name, price: t.price })),
+          kitchenArea: o.kitchenArea || item.kitchenArea,
         };
       })
       .filter(Boolean) as any[];
@@ -454,21 +498,42 @@ const MenuOrder = (props: IProps) => {
             {/* Món thêm sau khi gửi order */}
             <div className="mb-4">
               <h3 className="font-semibold text-[#9d5237] mb-2 ml-2">Món gọi thêm sau</h3>
-              {realtimeOrder?.addedItems?.length > 0 ? (
-                realtimeOrder.addedItems.map((oi: any) => (
-                  <div key={oi.menuItemId} className="border p-3 rounded-lg mb-2 bg-orange-100">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold text-[#7c2d12]">{oi.name}</p>
-                        {oi.variant && <p className="text-sm text-gray-600">Size: {oi.variant.size}</p>}
-                        {oi.toppings?.length > 0 && <p className="text-sm text-gray-600">Toppings: {oi.toppings.map((t: any) => t.name).join(", ")}</p>}
-                      </div>
-                      <div className="text-right font-semibold">{oi.quantity}×</div>
-                    </div>
+              {addOrders.length > 0 ? (
+                // Lặp qua từng batch
+                addOrders.map((batch: any, batchIndex: number) => (
+                  <div key={batch.batchId} className="mb-4">
+                    <p className="font-medium text-[#9d5237] mb-2 ml-2">
+                      Lần gọi {batchIndex + 1}
+                    </p>
+
+                    {batch.orderItems.length > 0 ? (
+                      batch.orderItems.map((oi: any) => (
+                        <div key={oi.menuItemId} className="border p-3 rounded-lg mb-2 bg-orange-100">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p className="font-semibold text-[#7c2d12]">{oi.name}</p>
+
+                              {oi.variant?.size && (
+                                <p className="text-sm text-gray-600">Size: {oi.variant.size}</p>
+                              )}
+
+                              {oi.toppings && oi.toppings.length > 0 && (
+                                <p className="text-sm text-gray-600">
+                                  Toppings: {oi.toppings.map((t: any) => t.name).join(", ")}
+                                </p>
+                              )}
+                            </div>
+                            <div className="text-right font-semibold">{oi.quantity}×</div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm ml-2">Chưa có món nào trong lần gọi này.</p>
+                    )}
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 text-sm">Chưa có món nào được gọi thêm.</p>
+                <p className="text-gray-500 text-sm ml-2">Chưa có món nào được gọi thêm.</p>
               )}
             </div>
 
@@ -521,7 +586,9 @@ const MenuOrder = (props: IProps) => {
         {(progressStatus === "processing" || progressStatus === "completed") && (
           <>
             <button
-              onClick={() => handleSendOrder(true)}
+              onClick={() => {
+                handleOpenModal(realtimeOrder);
+              }}
               className="bg-gradient-to-r from-green-500 to-lime-600 px-5 py-3 rounded-lg font-semibold shadow-md flex-1"
             >
               ➕ Thêm món
@@ -565,6 +632,14 @@ const MenuOrder = (props: IProps) => {
 </div>
 
     </div>
+
+    <OrderDetailModal
+      visible={isModalOpen}
+      order={selectedOrder}
+      onConfirm={handleConfirm}
+      onCancel={handleCancelOrder}
+    />
+
     </div>
   );
 };

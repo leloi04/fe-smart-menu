@@ -1,14 +1,14 @@
-import axios from "axios";
+import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL,
+  baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:8081',
   withCredentials: true,
 });
 
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
-const PUBLIC_PATHS = ["/tables", "/chef", "/staff"]; // 👈 tất cả routes bắt đầu bằng /tables là PUBLIC
+const PUBLIC_PATHS = ['/tables']; // 👈 tất cả routes bắt đầu bằng /tables là PUBLIC
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((promise) => {
@@ -25,7 +25,7 @@ instance.interceptors.request.use(
   function (config) {
     const currentPath = window.location.pathname;
     const isPublic = PUBLIC_PATHS.some((prefix) =>
-      currentPath.startsWith(prefix)
+      currentPath.startsWith(prefix),
     );
 
     // 👉 Nếu route là PUBLIC → không dùng Authorization
@@ -33,14 +33,14 @@ instance.interceptors.request.use(
       return config;
     }
 
-    const token = localStorage.getItem("access_token");
-    if (token) config.headers["Authorization"] = `Bearer ${token}`;
+    const token = localStorage.getItem('access_token');
+    if (token) config.headers['Authorization'] = `Bearer ${token}`;
 
     return config;
   },
   function (error) {
     return Promise.reject(error);
-  }
+  },
 );
 
 // ==========================
@@ -57,7 +57,7 @@ instance.interceptors.response.use(
 
     const currentPath = window.location.pathname;
     const isPublic = PUBLIC_PATHS.some((prefix) =>
-      currentPath.startsWith(prefix)
+      currentPath.startsWith(prefix),
     );
 
     // 👉 PUBLIC MODE thì KHÔNG redirect login
@@ -66,7 +66,7 @@ instance.interceptors.response.use(
     }
 
     // 👉 Không xử lý refresh ở trang login
-    if (currentPath === "/login") {
+    if (currentPath === '/login') {
       return Promise.reject(error);
     }
 
@@ -79,7 +79,7 @@ instance.interceptors.response.use(
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
-            originalRequest.headers["Authorization"] = `Bearer ${token}`;
+            originalRequest.headers['Authorization'] = `Bearer ${token}`;
             return instance(originalRequest);
           })
           .catch((err) => Promise.reject(err));
@@ -88,26 +88,26 @@ instance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const res = await instance.get("/auth/refresh-token");
+        const res = await instance.get('/auth/refresh-token');
         const newToken = res.data?.access_token;
 
-        if (!newToken) throw new Error("Refresh token expired");
+        if (!newToken) throw new Error('Refresh token expired');
 
-        localStorage.setItem("access_token", newToken);
+        localStorage.setItem('access_token', newToken);
         instance.defaults.headers.common[
-          "Authorization"
+          'Authorization'
         ] = `Bearer ${newToken}`;
 
         processQueue(null, newToken);
 
-        originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
         return instance(originalRequest);
       } catch (err) {
         processQueue(err, null);
-        localStorage.removeItem("access_token");
+        localStorage.removeItem('access_token');
 
-        if (currentPath !== "/login") {
-          window.location.href = "/login";
+        if (currentPath !== '/login') {
+          window.location.href = '/login';
         }
 
         return Promise.reject(err);
@@ -120,7 +120,7 @@ instance.interceptors.response.use(
       return error.response.data;
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default instance;

@@ -1,5 +1,8 @@
-import { message } from "antd";
+import { KitchenArea } from './global.d';
+import { message } from 'antd';
 export {};
+
+export type KitchenArea = 'HOT' | 'GRILL' | 'COLD' | 'DRINK';
 
 declare global {
   interface IBackendRes<T> {
@@ -83,7 +86,7 @@ declare global {
     price: number;
     image: string;
     category: string;
-    status: "available" | "out_of_stock";
+    status: 'available' | 'out_of_stock';
     variants: {
       size: string;
       price: number;
@@ -98,6 +101,7 @@ declare global {
       isDeleted: boolean;
       deletedAt: string | null;
     }[];
+    kitchenArea: KitchenArea;
   }
 
   interface ITableModal {
@@ -128,6 +132,7 @@ declare global {
         price: number;
       }[];
       _id: string;
+      kitchenArea: KitchenArea;
     }[];
     totalPrice: number;
     paymentStatus: string;
@@ -139,43 +144,4 @@ declare global {
       _id: string;
     }[];
   }
-}
-
-export type OrderStatus =
-  | "pending"
-  | "preparing"
-  | "ready"
-  | "served"
-  | "cancelled";
-export type ItemStatus = "initial" | "preparing" | "completed" | "served";
-export type KitchenArea = "hot" | "grill" | "cold" | "drinks";
-export type OrderType = "dine-in" | "online";
-export type UserRole = "staff" | "chef";
-
-export interface OrderItem {
-  id: string;
-  name: string;
-  variant?: string;
-  toppings: string[];
-  qty: number;
-  notes?: string;
-  status: ItemStatus;
-  kitchenArea: KitchenArea;
-  initialGroup?: boolean;
-  addedGroup?: boolean;
-  startTime?: Date;
-  completedTime?: Date;
-}
-
-export interface Order {
-  id: string;
-  type: OrderType;
-  tableNumber?: number;
-  customerName?: string;
-  status: OrderStatus;
-  items: OrderItem[];
-  notes?: string;
-  createdAt: Date;
-  confirmedAt?: Date;
-  completedAt?: Date;
 }

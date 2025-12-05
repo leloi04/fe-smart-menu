@@ -8,6 +8,7 @@ interface IAppContext {
   setUser: (v: IUser | null) => void;
   isLoading: boolean;
   setIsAuthenticated: (v: boolean) => void;
+  logout: () => void;
 }
 
 const CurrentAppContext = createContext<IAppContext | null>(null);
@@ -43,6 +44,12 @@ export const AppProvider = ({ children }: TProp) => {
     fetchAccount();
   }, []);
 
+  const logout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem("access_token");
+  }
+
   return isLoading ? (
     <div
       style={{
@@ -62,6 +69,7 @@ export const AppProvider = ({ children }: TProp) => {
         setUser,
         isLoading,
         setIsAuthenticated,
+        logout
       }}
     >
       {children}

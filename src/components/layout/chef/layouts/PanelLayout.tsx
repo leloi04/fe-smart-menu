@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, LogOut } from 'lucide-react';
+import { useCurrentApp } from '@/components/context/app.context';
 
 interface NavItem {
   id: string;
@@ -17,10 +18,12 @@ interface PanelLayoutProps {
 }
 
 export default function PanelLayout({ title, navItems, children, headerActions }: PanelLayoutProps) {
+  const { user, logout } = useCurrentApp();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    logout();
     navigate('/login');
   };
 
@@ -82,8 +85,8 @@ export default function PanelLayout({ title, navItems, children, headerActions }
             <div className="flex items-center space-x-4">
               {headerActions}
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">Le Loi</p>
-                <p className="text-xs text-gray-500 capitalize">levanloi2004bn@gmail.com</p>
+                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
             </div>
           </div>

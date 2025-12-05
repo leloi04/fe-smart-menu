@@ -1,18 +1,18 @@
-import axios from "services/axios.customize";
+import axios from 'services/axios.customize';
 
 // Account API Service
 const loginAPI = (username: string, password: string) => {
-  const urlBackend = "/auth/login";
+  const urlBackend = '/auth/login';
   return axios.post<IBackendRes<ILogin>>(urlBackend, { username, password });
 };
 
 const fetchAccountAPI = () => {
-  const urlBackend = "/auth/account";
+  const urlBackend = '/auth/account';
   return axios.get<IBackendRes<IFetchAccount>>(urlBackend);
 };
 
 const logoutAPI = () => {
-  const urlBackend = "/auth/logout";
+  const urlBackend = '/auth/logout';
   return axios.post<IBackendRes<ILogin>>(urlBackend);
 };
 
@@ -20,9 +20,9 @@ const registerAPI = (
   name: string,
   email: string,
   password: string,
-  phone: string
+  phone: string,
 ) => {
-  const urlBackend = "/auth/register";
+  const urlBackend = '/auth/register';
   return axios.post<IBackendRes<IRegister>>(urlBackend, {
     name,
     email,
@@ -62,7 +62,7 @@ const addCustomerToOrderAPI = (
   orderId: string,
   userId: string,
   name: string,
-  isGuest: boolean
+  isGuest: boolean,
 ) => {
   const urlBackend = `/orders/add-customer`;
   return axios.post<IBackendRes<any>>(urlBackend, {
@@ -73,12 +73,25 @@ const addCustomerToOrderAPI = (
   });
 };
 
+const handleConfirmOrderAPI = (
+  orderId: string,
+  tableNumber: string,
+  status: string,
+) => {
+  const urlBackend = `/orders/status-changed`;
+  return axios.post<IBackendRes<any>>(urlBackend, {
+    orderId,
+    tableNumber,
+    status,
+  });
+};
+
 // Table API service
 const verifyTableTokenAPI = (token: string) => {
   const urlBackend = `/tables/verify-token`;
   return axios.post<IBackendRes<{ tableId: string; tableNumber: string }>>(
     urlBackend,
-    { token }
+    { token },
   );
 };
 
@@ -90,6 +103,32 @@ const getTableByTokenAPI = (token: string) => {
 const getTableAPI = (tableId: string) => {
   const urlBackend = `/tables/${tableId}`;
   return axios.get<IBackendRes<ITableModal>>(urlBackend);
+};
+
+const getAllTableAPI = () => {
+  const urlBackend = `/tables/data`;
+  return axios.post<IBackendRes<ITableModal[]>>(urlBackend);
+};
+
+// Menu API
+const getCategoryAPI = () => {
+  const urlBackend = `/menus/category`;
+  return axios.post<IBackendRes<any>>(urlBackend);
+};
+
+const getMenus = (query: string) => {
+  const urlBackend = `/menus?${query}`;
+  return axios.get<IBackendRes<IModalPaginate<IMenuModal>>>(urlBackend);
+};
+
+const getMenuItemAPI = (id: string) => {
+  const urlBackend = `/menus/${id}`;
+  return axios.get<IBackendRes<IMenuModal>>(urlBackend);
+};
+
+const fetchMenuItemsAPI = () => {
+  const urlBackend = `/menus/items`;
+  return axios.post<IBackendRes<IMenuModal>>(urlBackend);
 };
 
 export {
@@ -106,4 +145,10 @@ export {
   logoutAPI,
   registerAPI,
   fetchAccountAPI,
+  handleConfirmOrderAPI,
+  getCategoryAPI,
+  fetchMenuItemsAPI,
+  getAllTableAPI,
+  getMenus,
+  getMenuItemAPI,
 };

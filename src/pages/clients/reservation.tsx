@@ -1,395 +1,368 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { CheckCircle, XCircle } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { Calendar, Users, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { getAllTableAPI } from '@/services/api';
+import { useCurrentApp } from '@/components/context/app.context';
+import { socket } from '@/services/socket';
+import { message } from 'antd';
 
-/* =======================
-   TYPE DEFINITIONS
-======================= */
+export interface RestaurantTable {
+  id: string;
+  tableNumber: number;
+  capacity: number;
+  status: 'available' | 'booked';
+}
 
-type Table = {
-  id: number;
-  name: string;
-  isBooked: boolean;
-};
-
-type ReservationInfo = {
-  name: string;
-  partySize: number;
-  date: string;
-  time: string;
-  tableId: number;
-  tableName: string;
-  status: "confirmed" | "checkedIn" | "cancelled";
-};
-
-/* =======================
-   FAKE DATA & HELPERS
-======================= */
-
-const initialFakeTables: Table[] = Array.from({ length: 12 }, (_, i) => ({
-  id: i + 1,
-  name: `Bàn ${i + 1}`,
-  isBooked: Math.random() < 0.25,
-}));
-
-const fetchTables = (date: string, time: string): Table[] => {
-  if (!date || !time) return initialFakeTables;
-  const seed = date.split("-").join("").length + time.length;
-  return initialFakeTables.map((t) => ({
-    ...t,
-    isBooked: (t.id + seed) % 4 === 0,
-  }));
-};
-
-/* =======================
-   RESERVATION MODAL
-======================= */
-
-const ReservationModal = ({
-  table,
-  isOpen,
-  onClose,
-  onConfirm,
-  date,
-  time,
-}: {
-  table: Table | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: (info: { name: string; partySize: number }) => void;
-  date: string;
-  time: string;
-}) => {
-  const [guestName, setGuestName] = useState("");
-  const [partySize, setPartySize] = useState(2);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setGuestName("");
-      setPartySize(2);
-    }
-  }, [isOpen]);
-
-  if (!isOpen || !table) return null;
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!guestName.trim() || partySize < 1) return;
-    onConfirm({ name: guestName.trim(), partySize });
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 animate-fadeIn">
-        <h3 className="text-2xl font-semibold mb-2 text-gray-800">
-          Xác nhận đặt bàn: <span className="text-amber-700">{table.name}</span>
-        </h3>
-        <p className="text-sm text-gray-500 mb-4">
-          Thời gian: <span className="font-medium">{date || "---"}</span> lúc{" "}
-          <span className="font-medium">{time || "---"}</span>
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tên khách hàng
-            </label>
-            <input
-              type="text"
-              value={guestName}
-              onChange={(e) => setGuestName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-              placeholder="Ví dụ: Trần Văn A"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Số lượng người (1-10)
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={partySize}
-              onChange={(e) => setPartySize(parseInt(e.target.value) || 1)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-              required
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              className="px-4 py-2 rounded-lg border bg-gray-100 hover:bg-gray-200"
-              onClick={onClose}
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700"
-            >
-              Xác nhận Đặt bàn
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+export default function BookingPage() {
+  const { user } = useCurrentApp();
+  const [tables, setTables] = useState<ITableModal[]>([]);
+  const [tablesFilter, setTablesFilter] = useState<RestaurantTable[]>([]);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split('T')[0],
   );
-};
+  const [selectedTime, setSelectedTime] = useState('18:00');
+  const [numberOfGuests, setNumberOfGuests] = useState(2);
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const customerName = user?.name || '';
+  const customerPhone = user?.phone || '';
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-/* =======================
-   RESERVATION ITEM
-======================= */
-
-const ReservationItem = ({
-  res,
-  onCheckIn,
-  onCancel,
-}: {
-  res: ReservationInfo;
-  onCheckIn: (res: ReservationInfo) => void;
-  onCancel: (res: ReservationInfo) => void;
-}) => {
-  const isCheckInEnabled = useCallback(() => {
-    if (res.status !== "confirmed") return false;
-    // create datetime local
-    const dt = new Date(`${res.date}T${res.time}:00`);
-    const now = new Date();
-    const diffMin = (dt.getTime() - now.getTime()) / 60000;
-    return diffMin >= 0 && diffMin <= 15;
-  }, [res]);
-
-  const [enabled, setEnabled] = useState(isCheckInEnabled());
-
+  // Socket realtime
   useEffect(() => {
-    if (res.status !== "confirmed") return;
-    const id = setInterval(() => setEnabled(isCheckInEnabled()), 5000);
-    return () => clearInterval(id);
-  }, [res.status, isCheckInEnabled]);
+    if (!tables || tables.length === 0) return;
 
-  const classes =
-    res.status === "confirmed"
-      ? "border-amber-600 bg-amber-50"
-      : res.status === "checkedIn"
-      ? "border-green-600 bg-green-50"
-      : "border-red-600 bg-red-50";
+    //  Bỏ select bàn hiên tại
+    setSelectedTableId(null);
 
-  return (
-    <div className={`p-4 rounded-lg border-l-4 ${classes} flex justify-between items-center`}>
-      <div>
-        <p className="font-semibold text-lg">
-          {res.tableName} — {res.partySize} khách
-        </p>
-        <p className="text-sm text-gray-600">
-          Khách: <span className="font-semibold text-gray-800">{res.name}</span> | Lúc{" "}
-          {res.time} — {res.date}
-        </p>
-      </div>
+    // Khách join vào phòng
+    socket.emit('joinBookingRoom', {
+      date: selectedDate,
+      timeSlot: selectedTime,
+    });
 
-      <div className="flex items-center gap-2">
-        {res.status === "confirmed" && (
-          <>
-            <button
-              onClick={() => onCheckIn(res)}
-              disabled={!enabled}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-                enabled ? "bg-green-600 text-white hover:bg-green-700" : "bg-gray-300 text-gray-500"
-              }`}
-              title={enabled ? "Check-in" : "Chỉ có thể check-in 15 phút trước giờ"}
-            >
-              <CheckCircle size={16} /> Check-in
-            </button>
+    socket.on('bookingCurrentState', (data) => {
+      setLoading(true);
 
-            <button
-              onClick={() => onCancel(res)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
-            >
-              <XCircle size={16} /> Hủy
-            </button>
-          </>
-        )}
+      // Lấy danh sách tableId đã được đặt
+      const bookedTableIds: any[] = data.map((item: any) => item.tableId);
 
-        {res.status === "checkedIn" && (
-          <div className="flex items-center gap-2 px-3 py-1 bg-white border border-green-300 rounded-lg text-green-700 font-semibold">
-            <CheckCircle size={16} /> Đã Check-in
-          </div>
-        )}
+      // Update tables theo trạng thái booking
+      const updatedTables: RestaurantTable[] = tables.map((table) => ({
+        id: table._id,
+        tableNumber: Number(table.tableNumber),
+        capacity: table.seats,
+        status: bookedTableIds.includes(table._id) ? 'booked' : 'available',
+      }));
 
-        {res.status === "cancelled" && (
-          <div className="flex items-center gap-2 px-3 py-1 bg-white border border-red-300 rounded-lg text-red-700 font-semibold">
-            <XCircle size={16} /> Đã hủy
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+      setTablesFilter(updatedTables);
+      setLoading(false);
+    });
 
-/* =======================
-   MAIN PAGE
-======================= */
+    socket.on('reservationSuccess', (data) => {
+      setLoading(true);
 
-export default function ReservationPage() {
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [tables, setTables] = useState<Table[]>(initialFakeTables);
-  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [reservations, setReservations] = useState<ReservationInfo[]>([]);
+      setTablesFilter((prev) =>
+        prev.map((t) =>
+          t.id === data.tableId ? { ...t, status: 'booked' } : t,
+        ),
+      );
 
-  useEffect(() => {
-    if (date && time) setTables(fetchTables(date, time));
-    if (!date || !time) setTables(initialFakeTables);
-  }, [date, time]);
+      setLoading(false);
+    });
 
-  const selectTable = (t: Table) => {
-    if (t.isBooked || !date || !time) return;
-    setSelectedTable(t);
-    setModalOpen(true);
-  };
+    socket.on('reservationFailed', (data) => {
+      message.error(data.message);
+    });
 
-  const confirmBooking = ({ name, partySize }: { name: string; partySize: number }) => {
-    if (!selectedTable) return;
-    const newRes: ReservationInfo = {
-      name,
-      partySize,
-      date,
-      time,
-      tableId: selectedTable.id,
-      tableName: selectedTable.name,
-      status: "confirmed",
+    return () => {
+      socket.emit('leaveBookingRoom', {
+        date: selectedDate,
+        timeSlot: selectedTime,
+      });
+      socket.off('reservationSuccess');
+      socket.off('reservationFailed');
+      socket.off('bookingCurrentState');
     };
-    setReservations((p) => [newRes, ...p]);
-    setTables((p) => p.map((t) => (t.id === selectedTable.id ? { ...t, isBooked: true } : t)));
-    setModalOpen(false);
-    setSelectedTable(null);
-  };
+  }, [selectedDate, selectedTime, tables]);
 
-  const handleCheckIn = (r: ReservationInfo) => {
-    setReservations((p) => p.map((x) => (x === r ? { ...x, status: "checkedIn" } : x)));
-  };
+  // ===================================
+  // 🔥 Fetch Table List
+  // ===================================
+  useEffect(() => {
+    const fetchTable = async () => {
+      const res = await getAllTableAPI();
 
-  const handleCancel = (r: ReservationInfo) => {
-    setReservations((p) => p.map((x) => (x === r ? { ...x, status: "cancelled" } : x)));
-    setTables((p) => p.map((t) => (t.id === r.tableId ? { ...t, isBooked: false } : t)));
-  };
+      if (res.data && Array.isArray(res.data)) {
+        setTables(res.data);
+      }
+    };
 
+    fetchTable();
+  }, []);
+
+  // ===================================
+  // 🔥 Fake Booking
+  // ===================================
+  function handleBooking() {
+    if (!selectedTableId || !customerName || !customerPhone) {
+      alert('Vui lòng điền đầy đủ thông tin và chọn bàn.');
+      return;
+    }
+
+    const data = {
+      customerName,
+      customerPhone,
+      notes,
+      date: selectedDate,
+      timeSlot: selectedTime,
+      capacity: numberOfGuests,
+      tableId: selectedTableId,
+    };
+
+    setSelectedTableId(null);
+    setNotes('');
+
+    socket.emit('createReservation', data);
+  }
+
+  // =======================
+  // UI Helpers
+  // =======================
+  const timeSlots = ['10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
+
+  function getTableStatusColor(status: string) {
+    switch (status) {
+      case 'available':
+        return 'bg-green-100 border-green-300 hover:bg-green-200 cursor-pointer';
+      case 'booked':
+        return 'bg-red-100 border-red-300 cursor-not-allowed';
+      default:
+        return 'bg-gray-100 border-gray-300';
+    }
+  }
+
+  function getTableStatusText(status: string) {
+    return status === 'available' ? 'Trống' : 'Đã có khách đặt';
+  }
+
+  function getTableStatusIcon(status: string) {
+    return status === 'available' ? (
+      <CheckCircle2 className="w-5 h-5 text-green-600" />
+    ) : (
+      <XCircle className="w-5 h-5 text-red-600" />
+    );
+  }
+
+  // ===================================
+  // 🔥 RETURN UI
+  // ===================================
   return (
-    <div className="min-h-screen bg-gray-50 py-12 flex flex-col items-center">
-      <div className="w-full max-w-7xl px-4 space-y-10">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-4xl font-light text-gray-800">Quản lý Đặt Bàn Nhà Hàng</h1>
-          <p className="text-gray-500">Vui lòng chọn ngày, giờ và bàn trống để đặt chỗ.</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* HEADER */}
+      <div className="bg-[#FF6B35] text-white py-12">
+        <div className="container mx-auto px-4">
+          <h1 className="text-4xl font-bold mb-4">Đặt bàn</h1>
+          <p className="text-orange-100">Chọn thời gian và bàn phù hợp</p>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* LEFT */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* TIME PICKER */}
+          <div className="bg-white rounded-2xl shadow-md p-6">
+            <h2 className="text-2xl font-bold mb-6">Chọn thời gian</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Date */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  <Calendar className="inline w-4 h-4 mr-1" /> Ngày
+                </label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-3 rounded-lg border"
+                />
+              </div>
+
+              {/* Time */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  <Clock className="inline w-4 h-4 mr-1" /> Giờ
+                </label>
+                <select
+                  value={selectedTime}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  className="w-full px-4 py-3 border rounded-lg"
+                >
+                  {timeSlots.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Guests */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  <Users className="inline w-4 h-4 mr-1" /> Số người
+                </label>
+                <select
+                  value={numberOfGuests}
+                  onChange={(e) => setNumberOfGuests(Number(e.target.value))}
+                  className="w-full px-4 py-3 border rounded-lg"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                    <option key={n} value={n}>
+                      {n} người
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* TABLE SELECT */}
+          <div className="bg-white rounded-2xl shadow-md p-6">
+            <h2 className="text-2xl font-bold mb-6">Chọn bàn</h2>
+
+            {loading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {[...Array(8)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="aspect-square bg-gray-200 rounded-xl animate-pulse"
+                  ></div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {tablesFilter.map((table) => (
+                  <button
+                    key={table.id}
+                    onClick={() =>
+                      table.status === 'available' &&
+                      setSelectedTableId(table.id)
+                    }
+                    disabled={table.status !== 'available'}
+                    className={`aspect-square border-2 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition 
+                      ${getTableStatusColor(table.status)}
+                      ${
+                        selectedTableId === table.id
+                          ? 'ring-4 ring-[#FF6B35] border-[#FF6B35]'
+                          : ''
+                      }`}
+                  >
+                    {getTableStatusIcon(table.status)}
+                    <div className="text-center">
+                      <p className="font-bold text-lg">
+                        Bàn {table.tableNumber}
+                      </p>
+                      <p className="text-xs mt-1">
+                        {getTableStatusText(table.status)}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Recent reservations */}
-        {reservations.length > 0 && (
-          <div className="bg-white p-6 rounded-xl shadow">
-            <h3 className="text-2xl font-semibold mb-4 text-center border-b pb-3">Đơn Đặt Bàn Gần Nhất</h3>
-            <div className="space-y-3">
-              {reservations.slice(0, 5).map((r, i) => (
-                <ReservationItem key={`${r.tableId}-${r.date}-${r.time}-${i}`} res={r} onCheckIn={handleCheckIn} onCancel={handleCancel} />
-              ))}
-            </div>
-          </div>
-        )}
+        {/* RIGHT */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-2xl shadow-md p-6 sticky top-24">
+            <h2 className="text-2xl font-bold mb-6">Thông tin đặt bàn</h2>
 
-        {/* Booking panel */}
-        <div className="bg-white p-8 rounded-xl shadow">
-          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-6">
-            <div>
-              <label className="block text-sm font-semibold mb-1">Ngày</label>
-              <input
-                type="date"
-                className="px-4 py-2 border rounded-lg shadow-sm"
-                min={new Date().toISOString().split("T")[0]}
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Họ tên
+                </label>
+                <input
+                  type="text"
+                  value={user?.name}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed pointer-events-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Số điện thoại
+                </label>
+                <input
+                  type="tel"
+                  value={user?.phone}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed pointer-events-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">
+                  Ghi chú
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border rounded-lg"
+                ></textarea>
+              </div>
+            </div>
+
+            {/* SUMMARY */}
+            <div className="bg-orange-50 rounded-xl p-4 mb-6 space-y-2">
+              <SummaryRow label="Ngày" value={selectedDate} />
+              <SummaryRow label="Giờ" value={selectedTime} />
+              <SummaryRow label="Số khách" value={`${numberOfGuests} người`} />
+              <SummaryRow
+                label="Bàn"
+                value={
+                  selectedTableId
+                    ? 'Bàn ' +
+                      tablesFilter.find((t) => t.id === selectedTableId)
+                        ?.tableNumber
+                    : 'Chưa chọn'
+                }
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-1">Giờ</label>
-              <input
-                type="time"
-                className="px-4 py-2 border rounded-lg shadow-sm"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* legend */}
-          <div className="flex justify-center gap-6 text-sm mb-6 text-gray-600">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-green-600 block" />
-              <span>Trống</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-red-600 block" />
-              <span>Đã đặt</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-gray-400 block" />
-              <span>Chưa chọn ngày/giờ</span>
-            </div>
-          </div>
-
-          {/* notice */}
-          {!date || !time ? (
-            <div className="bg-gray-100 p-3 rounded-lg text-center text-gray-600 mb-6 border-l-4 border-gray-300">
-              💡 Vui lòng <strong>chọn ngày và giờ</strong> để xem tình trạng bàn và tiến hành đặt.
-            </div>
-          ) : null}
-
-          <h3 className="text-xl font-semibold text-center mb-4">Sơ đồ Bàn</h3>
-
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-            {tables.map((t) => {
-              const unavailable = !date || !time;
-              const isDisabled = t.isBooked || unavailable;
-              const baseClass = "p-5 h-20 rounded-lg shadow font-semibold border-b-4 transition transform";
-              const stateClass = unavailable
-                ? "bg-gray-200 text-gray-500 border-gray-400 cursor-not-allowed"
-                : t.isBooked
-                ? "bg-red-200 text-red-800 border-red-400 cursor-not-allowed"
-                : "bg-green-100 text-green-800 border-green-400 hover:scale-105";
-
-              return (
-                <button
-                  key={t.id}
-                  disabled={isDisabled}
-                  onClick={() => selectTable(t)}
-                  className={`${baseClass} ${stateClass} ${selectedTable?.id === t.id && !t.isBooked ? "ring-4 ring-amber-600" : ""}`}
-                >
-                  {t.name}
-                </button>
-              );
-            })}
+            <button
+              onClick={handleBooking}
+              disabled={!selectedTableId || !customerName || !customerPhone}
+              className="w-full py-4 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 disabled:bg-gray-300"
+            >
+              Xác nhận đặt bàn
+            </button>
           </div>
         </div>
       </div>
 
-      <ReservationModal
-        table={selectedTable}
-        isOpen={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setSelectedTable(null);
-        }}
-        onConfirm={confirmBooking}
-        date={date}
-        time={time}
-      />
+      {/* SUCCESS MODAL */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-4">
+              <CheckCircle2 className="w-10 h-10 text-green-600" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">Đặt bàn thành công!</h3>
+            <p className="text-gray-600">Chúng tôi đã nhận yêu cầu đặt bàn.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
-      {/* small animation css */}
-      <style>{`
-        .animate-fadeIn { animation: fadeIn 0.22s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px)} to { opacity: 1; transform: translateY(0)} }
-      `}</style>
+// Component nhỏ giúp hiển thị summary
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between text-sm">
+      <span>{label}:</span>
+      <span className="font-semibold">{value}</span>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Empty, Button } from 'antd';
 import { Bell } from 'lucide-react';
 import type { Order } from '@/types';
@@ -7,6 +7,7 @@ import TableCard from '@/components/layout/chef/TableCard';
 import OrderOnlineCard from '@/components/layout/chef/OrderOnlineCard';
 import PendingModal from '@/components/layout/chef/PendingModal';
 import TableDetailModal from '@/components/layout/chef/TableDetailModal';
+import { socket } from '@/services/socket';
 
 // UI-only Staff page with inline fake data
 export default function StaffPage() {
@@ -337,34 +338,107 @@ export default function StaffPage() {
   ];
 
   const [pendingModalOpen, setPendingModalOpen] = useState(false);
-  const [pendingModalTab, setPendingModalTab] = useState<'dine-in' | 'online'>('dine-in');
+  const [pendingModalTab, setPendingModalTab] = useState<'dine-in' | 'online'>(
+    'dine-in',
+  );
   const [activeTab, setActiveTab] = useState<'table' | 'online'>('table');
   const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
+  const [dineInOrders, setDineInOrders] = useState<any[]>([]);
+  const [tableData, setTableData] = useState<
+    {
+      tableNumber: string;
+      totalItems: number | string;
+      orderItemsCompleted: any[];
+      timestamp: string;
+    }[]
+  >([]);
+  const [timestamp, setTimestamp] = useState<string>('');
+
+  useEffect(() => {
+    // ➤ Nhân viên join vào phòng staff
+    socket.emit('joinStaff');
+
+    // ➤ Lắng nghe sự kiện cập nhật đơn hàng từ server
+    socket.on('staffNotificationSync', (data) => {
+      console.log('Received staffNotificationSync: ', data);
+      const dineInOrders = data.map((order: any) => ({
+        id: order.id, // tạo id mới
+        tableNumber: order.tableNumber,
+        createdAt: new Date(order.timestamp),
+        items: order.orderItems.map((item: any) => ({
+          id: item.menuItemId,
+          name: item.name,
+          qty: item.quantity,
+          variant: item.variant || null,
+          toppings: item.toppings || [],
+          kitchenArea: item.kitchenArea,
+        })),
+        notes: '', // nếu có trường ghi chú thì map vào đây
+      }));
+
+      setDineInOrders(dineInOrders);
+    });
+
+    socket.on('newOrderTable', (notification: any) => {
+      const newOrder = {
+        id: notification.id, // tạo id mới
+        tableNumber: notification.tableNumber,
+        createdAt: new Date(notification.timestamp),
+        items: notification.orderItems.map((item: any) => ({
+          id: item.menuItemId,
+          name: item.name,
+          qty: item.quantity,
+          variant: item.variant || null,
+          toppings: item.toppings || [],
+          kitchenArea: item.kitchenArea,
+        })),
+        notes: '',
+      };
+
+      // Push vào state hiện có
+      setDineInOrders((prev) => [...prev, newOrder]);
+    });
+
+    if (activeTab === 'table') {
+      socket.on('dataTableUpdated', (data) => {
+        console.log('Data table updated: ', data);
+        setTableData((prev) => [...prev, data]);
+      });
+
+      socket.on('dataTable', (data) => {
+        setTableData(data);
+      });
+    } else {
+      console.log('activeTab: ', activeTab);
+    }
+
+    return () => {
+      socket.emit('leaveStaff');
+      socket.off('staffNotificationSync');
+      socket.off('newOrderTable');
+      socket.off('dataTableUpdated');
+      socket.off('dataTable');
+    };
+  }, [activeTab]);
 
   const orders = fakeOrders;
 
-  // Group dine-in orders by table
-  const tableOrders = useMemo(() => {
-    const grouped = new Map<number, Order[]>();
-    orders.forEach((order) => {
-      if (order.type === 'dine-in' && (order.status === 'preparing' || order.status === 'ready')) {
-        if (order.tableNumber) {
-          const existing = grouped.get(order.tableNumber) || [];
-          grouped.set(order.tableNumber, [...existing, order]);
-        }
-      }
-    });
-    return grouped;
-  }, [orders]);
-
   // Get online orders
   const onlinePreparingOrders = useMemo(() => {
-    return orders.filter((o) => o.type === 'online' && (o.status === 'preparing' || o.status === 'ready'));
+    return orders.filter(
+      (o) =>
+        o.type === 'online' &&
+        (o.status === 'preparing' || o.status === 'ready'),
+    );
   }, [orders]);
 
   const pendingCount = useMemo(() => {
-    return orders.filter((o) => o.status === 'pending').length;
-  }, [orders]);
+    const dineInLength = dineInOrders.length;
+    const onlineLength = orders.filter(
+      (o) => o.type === 'online' && o.status === 'pending',
+    ).length;
+    return dineInLength + onlineLength;
+  }, [orders, dineInOrders]);
 
   const handleOpenPendingModal = (type: 'dine-in' | 'online') => {
     setPendingModalTab(type);
@@ -374,7 +448,12 @@ export default function StaffPage() {
   return (
     <StaffLayout
       headerActions={
-        <Button onClick={() => handleOpenPendingModal(activeTab === 'table' ? 'dine-in' : 'online')} className="flex items-center gap-2">
+        <Button
+          onClick={() =>
+            handleOpenPendingModal(activeTab === 'table' ? 'dine-in' : 'online')
+          }
+          className="flex items-center gap-2"
+        >
           <Bell size={16} />
           Đang chờ ({pendingCount})
         </Button>
@@ -384,20 +463,29 @@ export default function StaffPage() {
         {activeTab === 'table' ? (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Order theo bàn</h2>
-              <Button type="default" onClick={() => setActiveTab('online')}>Xem Online</Button>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Order theo bàn
+              </h2>
+              <Button type="default" onClick={() => setActiveTab('online')}>
+                Xem Online
+              </Button>
             </div>
 
-            {tableOrders.size === 0 ? (
-              <Empty description="Không có order nào đang xử lý" className="mt-12" />
+            {tableData.length === 0 ? (
+              <Empty
+                description="Không có order của bàn nào đang xử lý"
+                className="mt-12"
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {Array.from(tableOrders.entries()).map(([tableNumber, tableOrderList]) => (
+                {tableData.map((item) => (
                   <TableCard
-                    key={tableNumber}
-                    tableNumber={tableNumber}
-                    orders={tableOrderList}
-                    onViewDetail={(orderId) => setDetailOrderId(orderId)}
+                    key={item.tableNumber}
+                    tableNumber={item.tableNumber}
+                    orders={item}
+                    onViewDetail={(tableNumber, timestamp) => (
+                      setDetailOrderId(tableNumber), setTimestamp(timestamp)
+                    )}
                   />
                 ))}
               </div>
@@ -406,12 +494,19 @@ export default function StaffPage() {
         ) : (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Order Online (Đang xử lý)</h2>
-              <Button type="default" onClick={() => setActiveTab('table')}>Xem Theo Bàn</Button>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Order Online (Đang xử lý)
+              </h2>
+              <Button type="default" onClick={() => setActiveTab('table')}>
+                Xem Theo Bàn
+              </Button>
             </div>
 
             {onlinePreparingOrders.length === 0 ? (
-              <Empty description="Không có order online nào đang xử lý" className="mt-12" />
+              <Empty
+                description="Không có order online nào đang xử lý"
+                className="mt-12"
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {onlinePreparingOrders.map((order) => (
@@ -427,9 +522,23 @@ export default function StaffPage() {
         )}
       </div>
 
-      <PendingModal open={pendingModalOpen} onClose={() => setPendingModalOpen(false)} initialTab={pendingModalTab} dineInOrders={orders.filter((o) => o.type === 'dine-in' && o.status === 'pending')} onlineOrders={orders.filter((o) => o.type === 'online' && o.status === 'pending')} />
+      <PendingModal
+        open={pendingModalOpen}
+        onClose={() => setPendingModalOpen(false)}
+        initialTab={pendingModalTab}
+        onlineOrders={orders.filter(
+          (o) => o.type === 'online' && o.status === 'pending',
+        )}
+      />
 
-      {detailOrderId && <TableDetailModal orderId={detailOrderId} order={orders.find((o) => o.id === detailOrderId)} open={!!detailOrderId} onClose={() => setDetailOrderId(null)} />}
+      {detailOrderId && (
+        <TableDetailModal
+          tableNumber={detailOrderId}
+          timestamp={timestamp}
+          open={!!detailOrderId}
+          onClose={() => setDetailOrderId(null)}
+        />
+      )}
     </StaffLayout>
   );
 }
