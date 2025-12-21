@@ -4,16 +4,15 @@ import {
   type ProColumns,
   type ActionType,
 } from '@ant-design/pro-components';
-import { Tag, Space, Button, Popconfirm, message } from 'antd';
+import { Tag, Space, Button, Popconfirm, message, Tooltip } from 'antd';
 import {
   EyeOutlined,
+  DeleteOutlined,
   PhoneOutlined,
   UserOutlined,
   CalendarOutlined,
   TeamOutlined,
   ClockCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
 } from '@ant-design/icons';
 import { useRef, useState } from 'react';
 import dayjs from 'dayjs';
@@ -29,24 +28,19 @@ const ManageReservationTablePage = () => {
     total: 0,
   });
 
-  // ===== HANDLERS =====
-  const handleCheckin = async (id: string) => {
-    message.success('Check-in thành công (demo)');
+  // === Xóa đặt bàn ===
+  const handleDelete = async (id: string) => {
+    message.success('Đã xóa phiếu đặt bàn!');
     actionRef.current?.reload();
   };
 
-  const handleCancel = async (id: string) => {
-    message.success('Đã hủy lịch đặt (demo)');
-    actionRef.current?.reload();
-  };
-
-  // ===== STATUS TAG =====
-  const renderStatus = (status: string) => {
+  // === Tag trạng thái ===
+  const statusColor = (status: string) => {
     switch (status) {
       case 'upcoming':
-        return <Tag color="blue">Sắp tới</Tag>;
+        return <Tag color="orange">Đang chờ</Tag>;
       case 'checked_in':
-        return <Tag color="green">Đã check-in</Tag>;
+        return <Tag color="blue">Đã xác nhận</Tag>;
       case 'expired':
         return <Tag color="red">Hết hạn</Tag>;
       case 'cancelled':
@@ -56,7 +50,6 @@ const ManageReservationTablePage = () => {
     }
   };
 
-  // ===== TABLE COLUMNS =====
   const columns: ProColumns<any>[] = [
     {
       dataIndex: 'index',
@@ -130,13 +123,13 @@ const ManageReservationTablePage = () => {
       dataIndex: 'status',
       filters: true,
       valueEnum: {
-        upcoming: { text: 'Sắp tới' },
-        checkedIn: { text: 'Đã check-in' },
+        upcoming: { text: 'Đang chờ' },
+        checked_in: { text: 'Đã xác nhận' },
         expired: { text: 'Hết hạn' },
         cancelled: { text: 'Đã hủy' },
       },
       width: 130,
-      render: (_, entity) => renderStatus(entity.status),
+      render: (_, entity) => statusColor(entity.status),
     },
 
     {
@@ -149,41 +142,25 @@ const ManageReservationTablePage = () => {
 
     {
       title: 'Hành động',
-      width: 220,
+      width: 120,
       hideInSearch: true,
       render: (_, entity) => (
         <Space>
-          {/* Xem chi tiết */}
           <Button
             type="link"
             icon={<EyeOutlined />}
-            onClick={() => console.log('Xem chi tiết', entity)}
+            onClick={() => message.info('Chức năng xem chi tiết chưa làm')}
           />
 
-          {/* CHỈ HIỆN KHI UPCOMING */}
-          {entity.status === 'upcoming' && (
-            <>
-              <Button
-                type="link"
-                icon={<CheckCircleOutlined />}
-                onClick={() => handleCheckin(entity._id)}
-              >
-                Check-in
-              </Button>
-
-              <Popconfirm
-                title="Hủy lịch đặt?"
-                description="Bạn chắc chắn muốn hủy lịch này?"
-                okText="Hủy"
-                cancelText="Đóng"
-                onConfirm={() => handleCancel(entity._id)}
-              >
-                <Button type="link" danger icon={<CloseCircleOutlined />}>
-                  Hủy
-                </Button>
-              </Popconfirm>
-            </>
-          )}
+          <Popconfirm
+            title="Xóa đặt bàn?"
+            description="Bạn chắc chắn muốn xóa lịch đặt bàn này?"
+            okText="Xóa"
+            cancelText="Hủy"
+            onConfirm={() => handleDelete(entity._id)}
+          >
+            <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} />
+          </Popconfirm>
         </Space>
       ),
     },
@@ -231,13 +208,13 @@ const ManageReservationTablePage = () => {
       }}
       toolBarRender={() => [
         <Button
-          key="add"
+          key="refresh"
           style={{
             background: PRIMARY,
             borderColor: PRIMARY,
             color: '#fff',
           }}
-          onClick={() => message.info('Mở modal thêm lịch (chưa làm)')}
+          onClick={() => actionRef.current?.reload()}
         >
           Thêm lịch mới
         </Button>,

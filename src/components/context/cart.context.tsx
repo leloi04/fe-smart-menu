@@ -24,15 +24,22 @@ export interface CartItem {
   quantity: number;
   variant: Variant | null;
   toppings: Topping[];
-  price: number;
+  price: number; // giá base khi không có variant
 }
 
 interface ICartContext {
   cart: CartItem[];
-  cartCount: number; // tổng số lượng
-  totalPrice: number; // tổng giá
+  cartCount: number;
+  totalPrice: number;
   addItem: (item: CartItem) => void;
-  updateQuantity: (menuItemId: string, quantity: number) => void;
+  updateItem: (
+    menuItemId: string,
+    data: {
+      quantity?: number;
+      variant?: Variant | null;
+      toppings?: Topping[];
+    },
+  ) => void;
   removeItem: (menuItemId: string) => void;
   clearCart: () => void;
 }
@@ -73,12 +80,33 @@ function cartReducer(state: CartItem[], action: any): CartItem[] {
       return updated;
     }
 
-    case 'UPDATE_QTY':
-      updated = state.map((item) =>
-        item.menuItemId === action.payload.id
-          ? { ...item, quantity: action.payload.quantity }
-          : item,
-      );
+    // ⭐ NEW: UPDATE FULL ITEM (quantity + variant + toppings)
+    case 'UPDATE_ITEM':
+      updated = state.map((item) => {
+        if (item.menuItemId !== action.payload.id) return item;
+
+        const newQuantity = action.payload.data.quantity ?? item.quantity;
+        const newVariant = action.payload.data.variant ?? item.variant;
+        const newToppings = action.payload.data.toppings ?? item.toppings;
+
+        // tính giá mới
+        const variantPrice = newVariant?.price ?? item.price;
+        const toppingPrice = newToppings.reduce(
+          (s: any, t: any) => s + t.price,
+          0,
+        );
+        const newTotalPrice = newQuantity * (variantPrice + toppingPrice);
+
+        return {
+          ...item,
+          quantity: newQuantity,
+          variant: newVariant,
+          toppings: newToppings,
+          // không lưu price tổng tại đây, chỉ lưu giá base
+          totalPriceForThisItem: newTotalPrice,
+        };
+      });
+
       localStorage.setItem('cart', JSON.stringify(updated));
       return updated;
 
@@ -104,36 +132,37 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cartCount, setCartCount] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
 
-  // Load dữ liệu từ localStorage khi reload
   useEffect(() => {
     const saved = localStorage.getItem('cart');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      dispatch({ type: 'INIT', payload: parsed });
+      dispatch({ type: 'INIT', payload: JSON.parse(saved) });
     }
   }, []);
 
-  // Tính cartCount và totalPrice mỗi khi cart thay đổi
+  // tự động tính tổng tiền
   useEffect(() => {
     const count = cart.length;
-    const price = cart.reduce(
-      (sum, i) =>
-        sum +
-        i.quantity *
-          ((i.variant?.price ?? i.price) +
-            i.toppings.reduce((tSum, t) => tSum + t.price, 0)),
-      0,
-    );
+
+    const price = cart.reduce((sum, i) => {
+      const variantPrice = i.variant?.price ?? i.price;
+      const toppingPrice = i.toppings.reduce((t, tp) => t + tp.price, 0);
+      return sum + i.quantity * (variantPrice + toppingPrice);
+    }, 0);
 
     setCartCount(count);
     setTotalPrice(price);
   }, [cart]);
 
   const addItem = (item: CartItem) => dispatch({ type: 'ADD', payload: item });
-  const updateQuantity = (menuItemId: string, quantity: number) =>
-    dispatch({ type: 'UPDATE_QTY', payload: { id: menuItemId, quantity } });
+
+  const updateItem = (
+    menuItemId: string,
+    data: { quantity?: number; variant?: Variant | null; toppings?: Topping[] },
+  ) => dispatch({ type: 'UPDATE_ITEM', payload: { id: menuItemId, data } });
+
   const removeItem = (menuItemId: string) =>
     dispatch({ type: 'REMOVE', payload: { id: menuItemId } });
+
   const clearCart = () => dispatch({ type: 'CLEAR' });
 
   return (
@@ -143,7 +172,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         cartCount,
         totalPrice,
         addItem,
-        updateQuantity,
+        updateItem, // ⭐ EXPORT NEW FUNCTION
         removeItem,
         clearCart,
       }}
@@ -154,7 +183,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 // =============================
-// HOOK SỬ DỤNG
+// HOOK
 // =============================
 export const useCart = () => {
   const ctx = useContext(CartContext);

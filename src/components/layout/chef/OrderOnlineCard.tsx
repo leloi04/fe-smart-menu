@@ -4,27 +4,37 @@ import { formatTime, getStatusBadge } from '@/utils/helpers';
 import type { Order } from '@/types';
 
 interface OrderOnlineCardProps {
-  order: Order;
-  onViewDetail: (orderId: string) => void;
+  order: {
+    id: string;
+    customerName: string;
+    orderItems: any[];
+    createdAt: Date;
+    totalItems: number;
+    orderItemsCompleted: any[];
+  };
+  onViewDetail: (customerName: string, timestamp: string) => void;
 }
 
-export default function OrderOnlineCard({ order, onViewDetail }: OrderOnlineCardProps) {
-  const statusBadge = getStatusBadge(order.status);
-  const completedCount = order.items.filter((item) => item.status === 'completed').length;
+export default function OrderOnlineCard({
+  order,
+  onViewDetail,
+}: OrderOnlineCardProps) {
+  const completedCount = order.orderItemsCompleted.length;
 
   return (
     <Card
       hoverable
       className="shadow-md hover:shadow-xl transition-all"
-      onClick={() => onViewDetail(order.id)}
+      onClick={() =>
+        onViewDetail(order.customerName, order.createdAt.toISOString())
+      }
     >
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Tag color="blue" className="text-base font-bold px-3 py-1">
-              {order.id}
+              Order - {order.id}
             </Tag>
-            <Badge status={statusBadge.color as any} text={statusBadge.text} />
           </div>
         </div>
 
@@ -35,7 +45,7 @@ export default function OrderOnlineCard({ order, onViewDetail }: OrderOnlineCard
 
         <div className="flex items-center gap-2 text-gray-600">
           <Package size={16} />
-          <span>{order.items.length} món</span>
+          <span>{order.orderItems.length} món</span>
           {completedCount > 0 && (
             <>
               <span className="text-gray-400">•</span>
@@ -45,13 +55,15 @@ export default function OrderOnlineCard({ order, onViewDetail }: OrderOnlineCard
         </div>
 
         <div className="text-sm text-gray-500 border-t pt-2">
-          {order.items.slice(0, 3).map((item) => (
+          {order.orderItems.slice(0, 3).map((item) => (
             <div key={item.id} className="truncate">
-              • {item.name} x {item.qty}
+              • {item.name} x {item.quantity}
             </div>
           ))}
-          {order.items.length > 3 && (
-            <div className="text-gray-400">... và {order.items.length - 3} món khác</div>
+          {order.orderItems.length > 3 && (
+            <div className="text-gray-400">
+              ... và {order.orderItems.length - 3} món khác
+            </div>
           )}
         </div>
 

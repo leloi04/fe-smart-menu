@@ -2,6 +2,7 @@ import { fetchMenuItemsAPI, getCategoryAPI } from '@/services/api';
 import { useEffect, useState } from 'react';
 import PreOderModal from './pre-order/modal.pre-order';
 import { useCart } from '@/components/context/cart.context';
+import { useNavigate } from 'react-router-dom';
 
 function PreOrderPage() {
   const { cartCount, totalPrice, cart } = useCart();
@@ -18,6 +19,8 @@ function PreOrderPage() {
   const [page, setPage] = useState(1);
   const pageSize = 8;
   const totalPages = Math.ceil(filteredDishes.length / pageSize);
+
+  const navigator = useNavigate();
 
   // Lấy dữ liệu theo trang
   const paginatedDishes = filteredDishes.slice(
@@ -125,7 +128,7 @@ function PreOrderPage() {
               className="w-full h-60 object-cover"
             />
             <div className="p-4">
-              <h4 className="font-semibold">{dish.name}</h4>
+              <h4 className="font-semibold line-clamp-1">{dish.name}</h4>
 
               <p className="text-sm text-black/70 font-medium line-clamp-2 mt-2 mb-3">
                 {dish.description}
@@ -203,7 +206,7 @@ function PreOrderPage() {
       {cartCount > 0 && (
         <div className="fixed bottom-6 right-6 z-50">
           <button
-            // onClick={() => setShowCart(true)}
+            onClick={() => navigator('/cart')}
             className="cursor-pointer bg-[#FF6B35] text-white px-6 py-4 rounded-full shadow-2xl hover:bg-orange-600 transition-all flex items-center gap-3"
           >
             <span className="font-bold">Giỏ hàng ({cartCount})</span>

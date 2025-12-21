@@ -1,5 +1,12 @@
 import { Modal, Tabs, Button, Card, Tag, Space, message } from 'antd';
-import { Clock, Users, AlertCircle, Bell } from 'lucide-react';
+import {
+  Clock,
+  Users,
+  AlertCircle,
+  Bell,
+  MapPinned,
+  Hourglass,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Order } from '@/types';
 import { formatTime } from '@/utils/helpers';
@@ -11,24 +18,27 @@ interface PendingModalProps {
   open: boolean;
   onClose: () => void;
   initialTab: 'dine-in' | 'online';
-  onlineOrders?: Order[];
+  setPendingCount: (v: number) => void;
 }
 
 export default function PendingModal(props: PendingModalProps) {
-  const { open, onClose, initialTab, onlineOrders = [] } = props;
+  const { open, onClose, initialTab, setPendingCount } = props;
   const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
   const [timestamp, setTimestamp] = useState<string>('');
-  const [orderComfirm, setOrderComfirm] = useState<any[]>([]);
+  const [orderTableConfirm, setOrderTableConfirm] = useState<any[]>([]);
+  const [orderOnlineConfirm, setOrderOnlineConfirm] = useState<any[]>([]);
   const [activeKey, setActiveKey] = useState<string>(initialTab);
 
   useEffect(() => {
     // ➤ Lắng nghe sự kiện cập nhật đơn hàng từ server
-    socket.on('staffNotificationSync', (data) => {
+    socket.on('staffTableNotificationSync', (data) => {
       const dineInOrders = data.map((order: any) => ({
-        id: order.id, // tạo id mới
+        keyRedis: order?.keyRedis,
+        batchId: order?.batchId,
+        id: order.id,
         tableNumber: order.tableNumber,
         createdAt: new Date(order.timestamp),
-        items: order.orderItems.map((item: any) => ({
+        orderItems: order.orderItems.map((item: any) => ({
           id: item.menuItemId,
           name: item.name,
           qty: item.quantity,
@@ -36,18 +46,21 @@ export default function PendingModal(props: PendingModalProps) {
           toppings: item.toppings || [],
           kitchenArea: item.kitchenArea,
         })),
+        price: order.totalPrice,
         notes: '', // nếu có trường ghi chú thì map vào đây
       }));
 
-      setOrderComfirm(dineInOrders);
+      setOrderTableConfirm(dineInOrders);
     });
 
     socket.on('newOrderTable', (notification: any) => {
       const newOrder = {
-        id: notification.id, // tạo id mới
+        keyRedis: notification?.keyRedis,
+        batchId: notification?.batchId,
+        id: notification.id,
         tableNumber: notification.tableNumber,
         createdAt: new Date(notification.timestamp),
-        items: notification.orderItems.map((item: any) => ({
+        orderItems: notification.orderItems.map((item: any) => ({
           id: item.menuItemId,
           name: item.name,
           qty: item.quantity,
@@ -55,66 +68,179 @@ export default function PendingModal(props: PendingModalProps) {
           toppings: item.toppings || [],
           kitchenArea: item.kitchenArea,
         })),
+        price: notification.totalPrice,
         notes: '',
       };
 
       // Push vào state hiện có
-      setOrderComfirm((prev) => [...prev, newOrder]);
+      setOrderTableConfirm((prev) => [...prev, newOrder]);
     });
 
-    console.log('Socket listeners for PendingModal set up.');
+    // ➤ Lắng nghe sự kiện cập nhật đơn hàng từ server
+    socket.on('staffPreOrderNotificationSync', (data) => {
+      const onlineOrders = data.map((order: any) => ({
+        keyRedis: order?.keyRedis,
+        id: order.id,
+        customerName: order.dataUser.name,
+        createdAt: new Date(order.timestamp),
+        orderItems: order.orderItems.map((item: any) => ({
+          id: item.menuItemId,
+          name: item.name,
+          qty: item.quantity,
+          variant: item.variant || null,
+          toppings: item.toppings || [],
+          kitchenArea: item.kitchenArea,
+        })),
+        deliveryAddress: order.deliveryAddress,
+        pickupTime: order.pickupTime,
+        method: order.method,
+        notes: order.note,
+      }));
+
+      setOrderOnlineConfirm(onlineOrders);
+    });
+
+    socket.on('newOrderPreOrder', (notification: any) => {
+      const newOnlineOrders = {
+        keyRedis: notification?.keyRedis,
+        id: notification.id,
+        customerName: notification.dataUser.name,
+        createdAt: new Date(notification.timestamp),
+        orderItems: notification.orderItems.map((item: any) => ({
+          id: item.menuItemId,
+          name: item.name,
+          qty: item.quantity,
+          variant: item.variant || null,
+          toppings: item.toppings || [],
+          kitchenArea: item.kitchenArea,
+        })),
+        deliveryAddress: notification.deliveryAddress,
+        pickupTime: notification.pickupTime,
+        method: notification.method,
+        notes: notification.note,
+      };
+
+      // Push vào state hiện có
+      setOrderOnlineConfirm((prev) => [...prev, newOnlineOrders]);
+    });
 
     return () => {
-      socket.off('staffNotificationSync');
+      socket.off('staffTableNotificationSync');
+      socket.off('staffPreOrderNotificationSync');
       socket.off('newOrderTable');
+      socket.off('newOrderPreOrder');
     };
-  }, [open]);
+  }, [open, activeKey]);
 
-  const handleConfirm = async (
-    orderId: string,
-    tableNumber: number,
-    status: string,
-  ) => {
-    const orderDineIn = orderComfirm.filter((o) => o.id !== orderId);
-    // const orderItems = orderComfirm.find((o) => o.id === orderId)?.items;
+  useEffect(() => {
+    if (!orderOnlineConfirm && !orderTableConfirm) return;
+    const pendingCount = orderOnlineConfirm.length + orderTableConfirm.length;
+    setPendingCount(pendingCount);
+  }, [orderOnlineConfirm, orderTableConfirm]);
+
+  // Xác nhận order
+  const handleConfirm = async (data: {
+    customerName?: string;
+    orderId: string;
+    tableNumber?: number;
+    status: string;
+    keyRedis: string;
+    batchId?: string;
+  }) => {
+    const { orderId, keyRedis, status, batchId, tableNumber, customerName } =
+      data;
     if (orderId && tableNumber) {
+      const orderItems = orderTableConfirm.find(
+        (o) => o.id === data.orderId,
+      ).orderItems;
+      const priceOrder = orderTableConfirm.find(
+        (o) => o.id === data.orderId,
+      ).price;
+      const ordersDineIn = orderTableConfirm.filter((o) => o.id !== orderId);
       message.success(`Đã xác nhận order của bàn ${tableNumber}!`);
-      setOrderComfirm(orderDineIn);
-      socket.emit('handleConfirmNotify', orderDineIn);
-      await handleConfirmOrderAPI(orderId, tableNumber.toString(), status);
+      setOrderTableConfirm(ordersDineIn);
+      socket.emit('handleConfirmNotify', {
+        id: orderId,
+        key: 'notification_table_order',
+        orderItems,
+        priceOrder,
+      });
+      if (batchId) {
+        await handleConfirmOrderAPI(
+          orderId,
+          { tableNumber: tableNumber.toString() },
+          status,
+          keyRedis,
+          batchId,
+        );
+      } else {
+        await handleConfirmOrderAPI(
+          orderId,
+          { tableNumber: tableNumber.toString() },
+          status,
+          keyRedis,
+        );
+      }
     } else {
-      message.error(`Xác nhận không thành công order của bàn ${tableNumber}!`);
-      console.error('Invalid orderId or tableNumber for confirming order.');
+      const ordersOnline = orderOnlineConfirm.filter((o) => o.id !== orderId);
+      message.success(`Đã xác nhận order khách tên ${customerName}!`);
+      setOrderOnlineConfirm(ordersOnline);
+      socket.emit('handleConfirmNotify', {
+        id: orderId,
+        key: 'notification_pre-order',
+      });
+      await handleConfirmOrderAPI(orderId, { customerName }, status, keyRedis);
     }
   };
 
-  const handleCancel = (
-    orderId: string,
-    tableNumber: number,
-    status: string,
-  ) => {
-    Modal.confirm({
-      title: `Xác nhận hủy order của bàn ${tableNumber}`,
-      content: 'Bạn có chắc chắn muốn hủy đơn hàng này?',
-      okText: 'Hủy đơn',
-      cancelText: 'Quay lại',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        const orderDineIn = orderComfirm.filter((o) => o.id !== orderId);
-        message.info(`Đơn order của bàn ${tableNumber} đã được hủy!`);
-        setOrderComfirm(orderDineIn);
-        socket.emit('handleConfirmNotify', orderDineIn);
-        await handleConfirmOrderAPI(orderId, tableNumber.toString(), status);
-      },
-    });
+  // Hủy xác nhận order
+  const handleCancel = async (data: {
+    customerName?: string;
+    orderId: string;
+    tableNumber?: number;
+    keyRedis: string;
+    batchId?: string;
+  }) => {
+    const { keyRedis, orderId, batchId, customerName, tableNumber } = data;
+    if (tableNumber) {
+      Modal.confirm({
+        title: `Xác nhận hủy order của bàn ${tableNumber}`,
+        content: 'Bạn có chắc chắn muốn hủy đơn hàng này?',
+        okText: 'Hủy đơn',
+        cancelText: 'Quay lại',
+        okButtonProps: { danger: true },
+        onOk: async () => {
+          const orderDineIn = orderTableConfirm.filter((o) => o.id !== orderId);
+          message.info(`Đơn order của bàn ${tableNumber} đã được hủy!`);
+          setOrderTableConfirm(orderDineIn);
+          socket.emit('handleCancelNotify', {
+            id: orderId,
+            key: keyRedis,
+            batchId,
+            keyTb: 'notification_table_order',
+          });
+          if (batchId) {
+            await handleConfirmOrderAPI(
+              orderId,
+              { tableNumber: tableNumber.toString() },
+              'only-processing',
+              keyRedis,
+            );
+          } else {
+            await handleConfirmOrderAPI(
+              orderId,
+              { tableNumber: tableNumber.toString() },
+              'draft',
+              keyRedis,
+            );
+          }
+        },
+      });
+    }
   };
 
   const renderOrderCard = (order: Order) => (
-    <Card
-      key={order.id}
-      className="mb-4 hover:shadow-lg transition-shadow"
-      bodyStyle={{ padding: '16px' }}
-    >
+    <Card key={order.id} className="mb-4 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
@@ -123,21 +249,47 @@ export default function PendingModal(props: PendingModalProps) {
                 ? `Bàn ${order.tableNumber}`
                 : order.customerName}
             </Tag>
+            {order.batchId && (
+              <Tag color="green" className="text-sm font-semibold">
+                Gọi thêm
+              </Tag>
+            )}
+            {order.method && (
+              <Tag color="purple" className="text-sm font-semibold">
+                {order.method}
+              </Tag>
+            )}
             <div className="flex items-center gap-1 text-gray-500 text-sm">
               <Clock size={14} />
               <span>{formatTime(order.createdAt)}</span>
             </div>
           </div>
 
+          {order.deliveryAddress && (
+            <div className="flex  items-center gap-2 text-gray-500 text-sm mt-2 mb-2">
+              <MapPinned size={18} />
+              <span className="line-clamp-1">
+                Địa chỉ nhận hàng: {order.deliveryAddress}
+              </span>
+            </div>
+          )}
+
+          {order.pickupTime && (
+            <div className="flex items-center gap-1 text-gray-500 text-sm mt-2 mb-2">
+              <Hourglass size={14} />
+              <span>Thời gian đến nhận hàng: {order.pickupTime}</span>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 mb-2">
             <Users size={16} className="text-gray-400" />
             <span className="text-gray-700 font-medium">
-              {order.items.length} món
+              {order.orderItems.length} món
             </span>
           </div>
 
           <div className="text-sm text-gray-600 mb-3">
-            {order.items.map((item) => (
+            {order.orderItems.map((item) => (
               <div key={item.id} className="ml-2">
                 • {item.name} x {item.qty}
               </div>
@@ -167,11 +319,20 @@ export default function PendingModal(props: PendingModalProps) {
             type="primary"
             className="bg-green-500 hover:bg-green-600"
             onClick={() =>
-              handleConfirm(
-                order.id,
-                order.tableNumber ? order.tableNumber : 123,
-                'processing',
-              )
+              order.customerName
+                ? handleConfirm({
+                    orderId: order.id,
+                    customerName: order.customerName,
+                    status: 'processing',
+                    keyRedis: order?.keyRedis!,
+                  })
+                : handleConfirm({
+                    orderId: order.id,
+                    tableNumber: order.tableNumber,
+                    status: 'processing',
+                    keyRedis: order?.keyRedis!,
+                    batchId: order.batchId,
+                  })
             }
           >
             Xác nhận
@@ -179,11 +340,18 @@ export default function PendingModal(props: PendingModalProps) {
           <Button
             danger
             onClick={() =>
-              handleCancel(
-                order.id,
-                order.tableNumber ? order.tableNumber : 123,
-                'draft',
-              )
+              order.customerName
+                ? handleCancel({
+                    orderId: order.id,
+                    customerName: order.customerName,
+                    keyRedis: order?.keyRedis!,
+                  })
+                : handleCancel({
+                    orderId: order.id,
+                    tableNumber: order.tableNumber,
+                    keyRedis: order?.keyRedis!,
+                    batchId: order.batchId,
+                  })
             }
           >
             Hủy
@@ -196,30 +364,30 @@ export default function PendingModal(props: PendingModalProps) {
   const items = [
     {
       key: 'dine-in',
-      label: `Đơn bàn (${orderComfirm.length})`,
+      label: `Đơn bàn (${orderTableConfirm.length})`,
       children: (
         <div className="max-h-[600px] overflow-y-auto pr-2">
-          {orderComfirm.length === 0 ? (
+          {orderTableConfirm.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               Không có đơn chờ xác nhận
             </div>
           ) : (
-            orderComfirm.map(renderOrderCard)
+            orderTableConfirm.map(renderOrderCard)
           )}
         </div>
       ),
     },
     {
       key: 'online',
-      label: `Đơn online (${onlineOrders.length})`,
+      label: `Đơn online (${orderOnlineConfirm.length})`,
       children: (
         <div className="max-h-[600px] overflow-y-auto pr-2">
-          {onlineOrders.length === 0 ? (
+          {orderOnlineConfirm.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               Không có đơn online chờ xác nhận
             </div>
           ) : (
-            onlineOrders.map(renderOrderCard)
+            orderOnlineConfirm.map(renderOrderCard)
           )}
         </div>
       ),
@@ -243,7 +411,9 @@ export default function PendingModal(props: PendingModalProps) {
       >
         <Tabs
           defaultActiveKey={initialTab}
-          onChange={(key) => setActiveKey(key)}
+          onChange={(key) => {
+            setActiveKey(key);
+          }}
           items={items}
         />
       </Modal>

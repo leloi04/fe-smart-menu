@@ -31,6 +31,25 @@ const registerAPI = (
   });
 };
 
+// File API
+const updateFileAPI = (fileImg: any, folder: string) => {
+  const bodyFormData = new FormData();
+  bodyFormData.append('fileUpload', fileImg);
+  return axios<
+    IBackendRes<{
+      fileUpload: string;
+    }>
+  >({
+    method: 'post',
+    url: '/files/upload',
+    data: bodyFormData,
+    headers: {
+      'Content-Type': 'multipart/formdata',
+      folder_type: folder,
+    },
+  });
+};
+
 // User API service
 const getUserAPI = (query: string) => {
   const urlBackend = `/users?${query}`;
@@ -43,6 +62,11 @@ const getMenuAPI = (query: string) => {
 };
 
 // Order API service
+const getOrdersAPI = (query: string) => {
+  const urlBackend = `/orders?${query}`;
+  return axios.get<IBackendRes<IModalPaginate<IOrderModal>>>(urlBackend);
+};
+
 const createOrderAPI = (payload: any) => {
   const urlBackend = `/orders`;
   return axios.post<IBackendRes<any>>(urlBackend, payload);
@@ -75,14 +99,18 @@ const addCustomerToOrderAPI = (
 
 const handleConfirmOrderAPI = (
   orderId: string,
-  tableNumber: string,
+  dataSet: { tableNumber?: string; customerName?: string },
   status: string,
+  keyRedis: string,
+  batchId?: string,
 ) => {
   const urlBackend = `/orders/status-changed`;
   return axios.post<IBackendRes<any>>(urlBackend, {
     orderId,
-    tableNumber,
+    dataSet,
     status,
+    keyRedis,
+    batchId,
   });
 };
 
@@ -110,6 +138,11 @@ const getAllTableAPI = () => {
   return axios.post<IBackendRes<ITableModal[]>>(urlBackend);
 };
 
+const getTableAllAPI = (query: string) => {
+  const urlBackend = `/tables?${query}`;
+  return axios.get<IBackendRes<IModalPaginate<ITableModal>>>(urlBackend);
+};
+
 // Menu API
 const getCategoryAPI = () => {
   const urlBackend = `/menus/category`;
@@ -129,6 +162,27 @@ const getMenuItemAPI = (id: string) => {
 const fetchMenuItemsAPI = () => {
   const urlBackend = `/menus/items`;
   return axios.post<IBackendRes<IMenuModal>>(urlBackend);
+};
+
+// Pre-Order
+const createPreOrderAPI = (payload: any) => {
+  const urlBackend = `/pre-order`;
+  return axios.post<IBackendRes<any>>(urlBackend, payload);
+};
+
+// Reservation Table API
+const getReservationsTableAPI = (query: string) => {
+  const urlBackend = `/reservations?${query}`;
+  return axios.get<IBackendRes<IModalPaginate<IReservation>>>(urlBackend);
+};
+
+// Payment API
+const createPaymentBankAPI = (orderId: string, amount: number) => {
+  const urlBackend = `/payments/vnpay`;
+  return axios.post<IBackendRes<{ url: string }>>(urlBackend, {
+    orderId,
+    amount,
+  });
 };
 
 export {
@@ -151,4 +205,10 @@ export {
   getAllTableAPI,
   getMenus,
   getMenuItemAPI,
+  createPreOrderAPI,
+  getTableAllAPI,
+  getOrdersAPI,
+  getReservationsTableAPI,
+  updateFileAPI,
+  createPaymentBankAPI,
 };

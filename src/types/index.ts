@@ -22,17 +22,22 @@ export interface OrderItem {
   addedGroup?: boolean;
   startTime?: Date;
   completedTime?: Date;
+  timestamp?: string;
 }
 
 export interface Order {
   id: string;
-  type: OrderType;
   tableNumber?: number;
   customerName?: string;
-  status: OrderStatus;
-  items: OrderItem[];
+  status: string;
+  orderItems: OrderItem[];
   notes?: string;
   createdAt: Date;
   confirmedAt?: Date;
   completedAt?: Date;
+  pickupTime?: string;
+  deliveryAddress?: string;
+  method?: string;
+  keyRedis?: string;
+  batchId?: string;
 }

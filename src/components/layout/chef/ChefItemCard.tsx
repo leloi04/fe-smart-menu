@@ -3,6 +3,8 @@ import { Card, Button, Tag, Space } from 'antd';
 import { Clock, PlayCircle, CheckCircle, Utensils } from 'lucide-react';
 import { formatTime, getKitchenAreaLabel } from '@/utils/helpers';
 import type { KitchenArea } from '@/types';
+import { socket } from '@/services/socket';
+import { data } from 'framer-motion/client';
 
 interface ChefItemCardProps {
   item: {
@@ -16,7 +18,7 @@ interface ChefItemCardProps {
     startTime?: Date;
     orderType: 'dine-in' | 'online';
     tableNumber?: string;
-    customers?: { name: string }[];
+    customerName?: string;
     dataKey?: string;
     batchId?: string | null;
     timestamp?: string;
@@ -26,13 +28,14 @@ interface ChefItemCardProps {
 export default function ChefItemCard({ item }: ChefItemCardProps) {
   const orderRef = item.tableNumber
     ? `Bàn ${item.tableNumber}`
-    : item.customers?.map((c) => c.name).join(', ') || 'Online';
+    : ` ${item.customerName}`;
+
+  const handleCompletedItem = async (data: any) => {
+    socket.emit('handleCompletedItem', data);
+  };
 
   return (
-    <Card
-      className="shadow-md hover:shadow-lg transition-shadow"
-      bodyStyle={{ padding: '16px' }}
-    >
+    <Card className="shadow-md hover:shadow-lg transition-shadow">
       <div className="space-y-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -40,6 +43,11 @@ export default function ChefItemCard({ item }: ChefItemCardProps) {
               <Tag color="orange" className="font-semibold">
                 {orderRef}
               </Tag>
+              {item.customerName && (
+                <Tag color="green" className="font-semibold">
+                  Online
+                </Tag>
+              )}
               <Tag color="purple">{getKitchenAreaLabel(item.kitchenArea)}</Tag>
               {item.batchId && <Tag color="green">Món gọi thêm</Tag>}
             </div>
@@ -90,7 +98,7 @@ export default function ChefItemCard({ item }: ChefItemCardProps) {
             type="primary"
             icon={<CheckCircle size={16} />}
             className="bg-green-500 hover:bg-green-600"
-            onClick={() => console.log('Complete clicked', item)}
+            onClick={() => handleCompletedItem(item)}
           >
             Hoàn thành
           </Button>

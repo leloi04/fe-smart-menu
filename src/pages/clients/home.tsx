@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, MapPin, Star } from 'lucide-react';
 import { Card } from 'antd';
 import { fetchMenuItemsAPI, getCategoryAPI } from '@/services/api';
+import { useNavigate } from 'react-router-dom';
 
 export default function HomePage() {
   const slides = [
@@ -47,6 +48,7 @@ export default function HomePage() {
   );
   const [menuItems, setMenuItems] = useState<IMenuModal[]>([]);
   const [filteredDishes, setFilteredDishes] = useState<IMenuModal[]>([]);
+  const navigate = useNavigate();
 
   // --- Slider: autoplay + smooth transition ---
   useEffect(() => {
@@ -253,7 +255,10 @@ export default function HomePage() {
                     {' '}
                     {dish.price.toLocaleString('vi-VN')}đ
                   </p>
-                  <button className="text-sm px-3 py-2 bg-[#FF6B35] text-white rounded-lg hover:bg-orange-600 cursor-pointer">
+                  <button
+                    onClick={() => navigate('/pre-order')}
+                    className="text-sm px-3 py-2 bg-[#FF6B35] text-white rounded-lg hover:bg-orange-600 cursor-pointer"
+                  >
                     Đi đặt món
                   </button>
                 </div>

@@ -1,11 +1,11 @@
-import type { ReactNode } from 'react';
+import { Outlet } from 'react-router-dom';
 import PanelLayout from './PanelLayout';
 import { adminNav } from './navConfig';
 
-export default function AdminLayout({ children }: { children?: ReactNode }) {
+export default function AdminLayout() {
   return (
     <PanelLayout title="Quản trị Hệ thống" navItems={adminNav}>
-      {children}
+      <Outlet />
     </PanelLayout>
   );
 }

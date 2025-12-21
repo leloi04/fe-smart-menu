@@ -144,4 +144,17 @@ declare global {
       _id: string;
     }[];
   }
+
+  interface IReservation {
+    _id: string;
+    customerName: string;
+    customerPhone: string;
+    tableId: string;
+    date: string;
+    timeSlot: string;
+    capacity: number;
+    status: string;
+    createdAt: Date;
+    expiredAt: Date;
+  }
 }

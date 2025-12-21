@@ -3,6 +3,7 @@ import {
   Calendar,
   Home,
   Menu,
+  ShoppingBag,
   ShoppingCart,
   User,
   UtensilsCrossed,
@@ -26,6 +27,7 @@ function AppHeader() {
     { path: '/menu', icon: UtensilsCrossed, label: 'Thực đơn' },
     { path: '/reservation', icon: Calendar, label: 'Đặt bàn' },
     { path: '/pre-order', icon: ShoppingCart, label: 'Đặt món' },
+    { path: '/cart', icon: ShoppingBag, label: 'Giỏ hàng' },
     { path: '/profile', icon: User, label: 'Tài khoản' },
   ];
 
