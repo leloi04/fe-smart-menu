@@ -5,9 +5,10 @@ import {
   ShoppingBag,
   Calendar,
   Settings,
-  Table,
   Receipt,
   Table2Icon,
+  Truck,
+  ClipboardClock,
 } from 'lucide-react';
 
 export const adminNav = [
@@ -38,6 +39,18 @@ export const staffNav = [
     label: 'Quản lý đơn',
   },
   { id: 'tables', to: '/staff/tables', icon: Table2Icon, label: 'Quản lý bàn' },
+  {
+    id: 'deliver',
+    to: '/staff/delivers',
+    icon: Truck,
+    label: 'Quản lý vận chuyển đơn',
+  },
+  {
+    id: 'schedule',
+    to: '/staff/schedules',
+    icon: ClipboardClock,
+    label: 'Quản lý lịch đặt bàn',
+  },
   { id: 'bills', to: '/staff/bills', icon: Receipt, label: 'Quản lý hóa đơn' },
 ];
 

@@ -9,14 +9,26 @@ interface IProps {
   setDataItem: (v: any) => void;
 }
 
+interface Variant {
+  _id: string;
+  size: string;
+  price: number;
+}
+
+interface Topping {
+  _id: string;
+  name: string;
+  price: number;
+}
+
 export default function PreOderModal(props: IProps) {
   const { addItem } = useCart();
   const { open, dataItem, setDataItem, setOpen } = props;
   const [quantity, setQuantity] = useState(1);
   const [basePrice, setBasePrice] = useState<number>(0);
   const [totalPrice, setTotalPrice] = useState<number>(0);
-  const [selectedSize, setSelectedSize] = useState(null);
-  const [selectedToppings, setSelectedToppings] = useState([]);
+  const [selectedSize, setSelectedSize] = useState<Variant | null>(null);
+  const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
 
   /* Khi mở modal hoặc đổi món ⇒ set giá base */
   useEffect(() => {
@@ -28,6 +40,7 @@ export default function PreOderModal(props: IProps) {
       setBasePrice(dataItem.variants[0].price);
     } else {
       setBasePrice(dataItem.price || 0);
+      setSelectedSize(null);
     }
 
     // Reset toppings khi mở món mới
@@ -39,37 +52,38 @@ export default function PreOderModal(props: IProps) {
   useEffect(() => {
     if (!dataItem) return;
 
-    const sizePrice = selectedSize ? (selectedSize as any).price : basePrice;
+    const sizePrice = selectedSize ? selectedSize.price : basePrice;
 
     // Tính tổng tiền toppings đã chọn
     const toppingsPrice =
       dataItem.toppings
-        ?.filter((t: any) => selectedToppings.includes(t._id))
-        ?.reduce((sum: number, t: any) => sum + t.price, 0) || 0;
+        ?.filter((t: Topping) => selectedToppings.includes(t._id))
+        ?.reduce((sum: any, t: any) => sum + t.price, 0) || 0;
 
-    const total = (sizePrice + toppingsPrice) * quantity;
-
-    setTotalPrice(total);
+    setTotalPrice((sizePrice + toppingsPrice) * quantity);
   }, [quantity, selectedSize, selectedToppings, basePrice, dataItem]);
 
   /* Toggle topping */
   const toggleTopping = (id: string) => {
-    setSelectedToppings((prev: any) =>
-      prev.includes(id) ? prev.filter((t: any) => t !== id) : [...prev, id],
+    setSelectedToppings((prev: string[]) =>
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
     );
   };
 
   const handleConfirm = () => {
+    if (!dataItem) return;
+
     const toppings = dataItem.toppings
-      ?.filter((t: any) => selectedToppings.includes(t._id))
-      .map((item: any) => ({
-        name: item.name,
-        price: item.price,
-        _id: item._id,
+      ?.filter((t: Topping) => selectedToppings.includes(t._id))
+      .map((t: Topping) => ({
+        name: t.name,
+        price: t.price,
+        _id: t._id,
       }));
+
     const data: CartItem = {
-      menuItemId: dataItem?._id,
-      name: dataItem?.name,
+      menuItemId: dataItem._id,
+      name: dataItem.name,
       quantity,
       variant: selectedSize,
       toppings,
@@ -85,12 +99,16 @@ export default function PreOderModal(props: IProps) {
       title={dataItem?.name}
       open={open}
       onCancel={() => {
-        setOpen(false), setDataItem(null);
+        setOpen(false);
+        setDataItem(null);
       }}
       footer={[
         <button
           key="cancel"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setOpen(false);
+            setDataItem(null);
+          }}
           className="px-4 py-2 border rounded-lg hover:bg-gray-100 mr-2 cursor-pointer"
         >
           Hủy
@@ -150,7 +168,7 @@ export default function PreOderModal(props: IProps) {
           <div>
             <h3 className="font-semibold mb-2">Chọn Size:</h3>
             <div className="flex gap-3">
-              {dataItem.variants.map((s) => (
+              {dataItem.variants.map((s: Variant) => (
                 <button
                   key={s._id}
                   onClick={() => setSelectedSize(s)}
@@ -172,7 +190,7 @@ export default function PreOderModal(props: IProps) {
           <div>
             <h3 className="font-semibold mb-2">Toppings:</h3>
             <div className="grid grid-cols-2 gap-3">
-              {dataItem.toppings.map((t) => (
+              {dataItem.toppings.map((t: Topping) => (
                 <label
                   key={t._id}
                   className={`p-3 border rounded-lg flex items-center gap-3 cursor-pointer ${

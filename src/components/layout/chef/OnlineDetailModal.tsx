@@ -1,27 +1,19 @@
-import { socket } from '@/services/socket';
-import type { Order } from '@/types';
 import { formatTimeShort } from '@/utils/helpers';
 import { Modal, Tag, Divider } from 'antd';
 import { Package, Clock } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 interface TableDetailModalProps {
   customerName?: string;
   open: boolean;
   onClose: () => void;
   timestamp: string;
+  order: any;
 }
 
 export default function OnlineDetailModal(props: TableDetailModalProps) {
-  const { customerName, open, onClose, timestamp } = props;
-  const [orderItems, setOrderItems] = useState<any[]>([]);
-  const [completedOrderItems, setCompletedOrderItems] = useState<any[]>([]);
+  const { customerName, open, onClose, timestamp, order } = props;
 
-  const renderSection = (
-    title: string,
-    items: Order['orderItems'],
-    emptyText: string,
-  ) => (
+  const renderSection = (title: string, items: any[], emptyText: string) => (
     <div className="mb-6">
       <h3 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
         <Package size={18} className="text-orange-500" />
@@ -33,7 +25,7 @@ export default function OnlineDetailModal(props: TableDetailModalProps) {
         <div className="space-y-2 ml-6">
           {items.map((item) => (
             <div
-              key={item.id}
+              key={item.id || item.menuItemId}
               className="flex items-start justify-between bg-gray-50 p-3 rounded"
             >
               <div className="flex-1">
@@ -42,16 +34,23 @@ export default function OnlineDetailModal(props: TableDetailModalProps) {
                   {item.variant && (
                     <span className="text-sm text-gray-500">
                       {' '}
-                      ({item.variant})
+                      (
+                      {typeof item.variant === 'string'
+                        ? item.variant
+                        : item.variant.size}
+                      )
                     </span>
                   )}
                 </div>
                 <div className="text-sm text-gray-600">
-                  Số lượng: <span className="font-semibold">{item.qty}</span>
+                  Số lượng:{' '}
+                  <span className="font-semibold">
+                    {item.qty ?? item.quantity}
+                  </span>
                 </div>
                 {item.toppings && item.toppings.length > 0 && (
                   <div className="text-sm text-gray-500">
-                    Topping: {item.toppings.join(', ')}
+                    Topping: {item.toppings.map((t: any) => t.name).join(', ')}
                   </div>
                 )}
                 {item.notes && (
@@ -61,10 +60,10 @@ export default function OnlineDetailModal(props: TableDetailModalProps) {
                 )}
               </div>
               <div className="ml-4 text-right">
-                {item.status === 'preparing' && item.startTime && (
+                {item.timestamp && (
                   <div className="flex items-center gap-1 text-sm text-blue-600">
                     <Clock size={14} />
-                    <span>{formatTimeShort(item.startTime)}</span>
+                    <span>{formatTimeShort(new Date(item.timestamp))}</span>
                   </div>
                 )}
                 {item.status === 'completed' && (
@@ -88,7 +87,7 @@ export default function OnlineDetailModal(props: TableDetailModalProps) {
         <div className="flex items-center gap-2">
           <Package size={20} className="text-orange-500" />
           <span className="text-lg font-semibold">
-            Chi tiết Order -{`Khách ${customerName}`}
+            Chi tiết Order - Khách {customerName}
           </span>
         </div>
       }
@@ -99,74 +98,19 @@ export default function OnlineDetailModal(props: TableDetailModalProps) {
           <Tag color="blue">{formatTimeShort(new Date(timestamp))}</Tag>
         </div>
 
-        {/* {current.notes && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4">
-            <p className="text-sm text-gray-700"><strong>Ghi chú đơn:</strong> {current.notes}</p>
-          </div>
-        )} */}
-
         <Divider />
 
-        <div className="mb-6">
-          <h3 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <Package size={18} className="text-orange-500" />
-            Món đang chế biến
-          </h3>
+        {renderSection(
+          'Món đang chế biến',
+          order.orderItems ?? [],
+          'Chưa có món nào đang chế biến.',
+        )}
 
-          <div className="ml-6 space-y-4">
-            <div>
-              {orderItems.length === 0 ? (
-                <p className="text-xs text-gray-400 ml-4">Chưa có món nào</p>
-              ) : (
-                <div className="space-y-2 ml-4">
-                  {orderItems.map((item, index) => (
-                    <div
-                      key={item.menuItemId || index}
-                      className="flex items-start justify-between bg-gray-50 p-3 rounded"
-                    >
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-800">
-                          {item.name}
-                          {item.variant && (
-                            <span className="text-sm text-gray-500">
-                              {' '}
-                              ({item.variant.size})
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          Số lượng:{' '}
-                          <span className="font-semibold">{item.quantity}</span>
-                        </div>
-                        {item.toppings && item.toppings.length > 0 && (
-                          <div className="text-sm text-gray-500">
-                            Topping:{' '}
-                            {item.toppings.map((t: any) => t.name).join(', ')}
-                          </div>
-                        )}
-                        {item.notes && (
-                          <div className="text-sm text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1">
-                            Ghi chú: {item.notes}
-                          </div>
-                        )}
-                      </div>
-                      <div className="ml-4 text-right">
-                        {item.startTime && (
-                          <div className="flex items-center gap-1 text-sm text-blue-600">
-                            <Clock size={14} />
-                            <span>{formatTimeShort(item.startTime)}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {renderSection('Món đã xong', [], 'Chưa có món nào hoàn thành.')}
+        {renderSection(
+          'Món đã xong',
+          order.orderItemsCompleted ?? [],
+          'Chưa có món nào hoàn thành.',
+        )}
       </div>
     </Modal>
   );

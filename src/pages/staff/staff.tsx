@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Empty, Button } from 'antd';
 import { Bell } from 'lucide-react';
-import type { Order } from '@/types';
 import StaffLayout from '@/components/layout/chef/layouts/StaffLayout';
 import TableCard from '@/components/layout/chef/TableCard';
 import OrderOnlineCard from '@/components/layout/chef/OrderOnlineCard';
@@ -35,6 +34,7 @@ export default function StaffPage() {
   >([]);
   const [onlineData, setOnlineData] = useState<any[]>([]);
   const [timestamp, setTimestamp] = useState<string>('');
+  const [preOrderDetail, setPreOrderDetail] = useState<any | null>(null);
 
   useEffect(() => {
     // ➤ Nhân viên join vào phòng staff
@@ -208,9 +208,10 @@ export default function StaffPage() {
                   <OrderOnlineCard
                     key={order.id}
                     order={order}
-                    onViewDetail={(customerName, timestamp) => (
+                    onViewDetail={(customerName, timestamp, order) => (
                       setDetailCustomerName(customerName),
-                      setTimestamp(timestamp)
+                      setTimestamp(timestamp),
+                      setPreOrderDetail(order)
                     )}
                   />
                 ))}
@@ -240,6 +241,7 @@ export default function StaffPage() {
         <OnlineDetailModal
           customerName={detailCustomerName}
           timestamp={timestamp}
+          order={preOrderDetail}
           open={!!detailCustomerName}
           onClose={() => setDetailCustomerName(null)}
         />

@@ -1,16 +1,15 @@
 import CreateMenu from '@/components/admin/menu/create.menu';
-import { getMenus } from '@/services/api';
+import UpdateMenu from '@/components/admin/menu/update.menu';
+import { deleteMenuAPI, getMenus } from '@/services/api';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { message, Button, Popconfirm, Space, Tag, Image, Select } from 'antd';
+import { message, Button, Popconfirm, Space, Tag, Image } from 'antd';
 import { useRef, useState } from 'react';
 
 const PRIMARY = '#FF6B35';
 
 const ManageMenuPage = () => {
-  const [openViewDetail, setOpenViewDetail] = useState(false);
-  const [viewDataDetail, setViewDataDetail] = useState<any>(null);
   const [openModal, setOpenModal] = useState(false);
   const [openModalUpdate, setOpenModalUpdate] = useState(false);
 
@@ -21,11 +20,12 @@ const ManageMenuPage = () => {
     total: 0,
   });
 
-  const [dataTable, setDataTable] = useState<any[]>([]);
   const [menuData, setMenuData] = useState<any>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
 
   const confirmDelete = async () => {
+    if (!menuId) return;
+    await deleteMenuAPI(menuId);
     message.success('Xóa món thành công!');
     refreshTable();
   };
@@ -174,8 +174,6 @@ const ManageMenuPage = () => {
             total: metaApi.total || 0,
           });
 
-          setDataTable(result);
-
           return {
             data: result,
             success: true,
@@ -209,6 +207,14 @@ const ManageMenuPage = () => {
       <CreateMenu
         openModal={openModal}
         setOpenModal={setOpenModal}
+        refreshTable={refreshTable}
+      />
+
+      <UpdateMenu
+        menuData={menuData}
+        setMenuData={setMenuData}
+        openModal={openModalUpdate}
+        setOpenModal={setOpenModalUpdate}
         refreshTable={refreshTable}
       />
     </>

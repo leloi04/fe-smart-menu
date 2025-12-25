@@ -1,16 +1,21 @@
-import { getTableAllAPI } from '@/services/api';
+import { deleteTableAPI, getTableAllAPI } from '@/services/api';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { message, Button, Popconfirm, Space, Tag } from 'antd';
-import { useEffect, useRef, useState } from 'react';
-import QRCode from 'qrcode';
+import { useRef, useState } from 'react';
 import QRCell from './qrcode';
+import CreateTable from '@/components/admin/table/create.table';
+import UpdateTable from '@/components/admin/table/update.table';
 
 const PRIMARY = '#FF6B35';
 
 const ManageTablePage = () => {
   const actionRef = useRef<ActionType | null>(null);
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [openModalUpdate, setOpenModalUpdate] = useState<boolean>(false);
+  const [tableData, setTableData] = useState<any>(null);
+  const [tableId, setTableId] = useState<string | null>(null);
 
   const [meta, setMeta] = useState({
     current: 1,
@@ -23,6 +28,8 @@ const ManageTablePage = () => {
   };
 
   const confirmDelete = async () => {
+    if (!tableId) return;
+    await deleteTableAPI(tableId);
     message.success('Xóa bàn thành công!');
     refreshTable();
   };
@@ -61,23 +68,6 @@ const ManageTablePage = () => {
         ),
     },
     {
-      title: 'Phục vụ đơn',
-      dataIndex: 'currentOrder',
-      hideInSearch: true,
-      render: (_, entity) =>
-        entity.currentOrder ? (
-          <Tag color="processing">{entity.currentOrder}</Tag>
-        ) : (
-          <Tag color="default">Không có</Tag>
-        ),
-    },
-    {
-      title: 'Tạo bởi',
-      dataIndex: ['createdBy', 'email'],
-      hideInSearch: true,
-      width: 160,
-    },
-    {
       title: 'QR Code',
       hideInSearch: true,
       width: 150,
@@ -96,25 +86,28 @@ const ManageTablePage = () => {
     {
       title: 'Hành động',
       hideInSearch: true,
-      width: 120,
       render: (_, entity) => (
         <Space>
           <EditOutlined
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', color: PRIMARY }}
             onClick={() => {
-              message.info('Chức năng sửa bàn đang được xử lý...');
+              setOpenModalUpdate(true);
+              setTableData(entity);
             }}
           />
 
           <Popconfirm
             placement="leftTop"
-            title="Xóa bàn?"
-            description="Bạn có chắc muốn xóa bàn này?"
+            title="Xóa món ăn?"
+            description="Bạn có chắc chắn muốn xóa món này?"
             onConfirm={confirmDelete}
             okText="Xóa"
             cancelText="Hủy"
           >
-            <DeleteOutlined style={{ cursor: 'pointer' }} onClick={() => {}} />
+            <DeleteOutlined
+              style={{ cursor: 'pointer', color: 'red' }}
+              onClick={() => setTableId(entity._id)}
+            />
           </Popconfirm>
         </Space>
       ),
@@ -166,12 +159,26 @@ const ManageTablePage = () => {
               backgroundColor: PRIMARY,
               borderColor: PRIMARY,
             }}
-            onClick={() => message.info('Chức năng thêm bàn đang xử lý...')}
+            onClick={() => setOpenModal(true)}
             type="primary"
           >
             Thêm bàn mới
           </Button>,
         ]}
+      />
+
+      <CreateTable
+        openModal={openModal}
+        setOpenModal={setOpenModal}
+        refreshTable={refreshTable}
+      />
+
+      <UpdateTable
+        tableData={tableData}
+        setTableData={setTableData}
+        openModal={openModalUpdate}
+        setOpenModal={setOpenModalUpdate}
+        refreshTable={refreshTable}
       />
     </>
   );

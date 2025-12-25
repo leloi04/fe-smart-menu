@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
+import { handlePaymentSuccess, vnpayReturnAPI } from '@/services/api';
 
 type PaymentStatus = 'loading' | 'success' | 'fail' | 'cancelled';
 
@@ -11,7 +12,7 @@ export default function VNPayReturnPage() {
   const paymentId = params.get('paymentId');
 
   const [status, setStatus] = useState<PaymentStatus>('loading');
-  const [countdown, setCountdown] = useState(10000000000000000000000000);
+  const [countdown, setCountdown] = useState(5);
 
   // ===== Xác nhận thanh toán =====
   useEffect(() => {
@@ -55,13 +56,18 @@ export default function VNPayReturnPage() {
   // ===== Countdown redirect (SUCCESS) =====
   useEffect(() => {
     if (status !== 'success') return;
-    console.log('start countdown');
+    const handlePayment = async () => {
+      if (!paymentId) return;
+      await vnpayReturnAPI();
+      await handlePaymentSuccess(paymentId);
+    };
+    handlePayment();
 
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          navigate('/review');
+          navigate('/payments/success');
           return 0;
         }
         return prev - 1;
@@ -105,9 +111,13 @@ export default function VNPayReturnPage() {
               Giao dịch của bạn đã được xác nhận thành công.
             </p>
 
+            <p className="text-gray-600 text-sm">
+              Bạn có thể qua quầy để nhận bill của bàn!
+            </p>
+
             <div className="bg-green-50 border border-green-200 rounded-xl py-3">
               <p className="text-sm text-green-700">
-                Tự động chuyển sang trang đánh giá sau{' '}
+                Tự động chuyển sang trang cảm ơn sau{' '}
                 <span className="font-semibold">{countdown}</span> giây
               </p>
             </div>

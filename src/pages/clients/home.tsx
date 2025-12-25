@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, MapPin, Star } from 'lucide-react';
 import { Card } from 'antd';
 import { fetchMenuItemsAPI, getCategoryAPI } from '@/services/api';
 import { useNavigate } from 'react-router-dom';
+import BookingForm from './home/form.reservation';
 
 export default function HomePage() {
   const slides = [
@@ -129,7 +130,7 @@ export default function HomePage() {
   }, []);
 
   // --- Helpers ---
-  const goToSlide = (index: number) => setCurrentSlide(index % SLIDE_COUNT);
+  // const goToSlide = (index: number) => setCurrentSlide(index % SLIDE_COUNT);
 
   return (
     <div className="w-full flex flex-col gap-12">
@@ -295,35 +296,7 @@ export default function HomePage() {
           </div>
 
           {/* Right Form (demo, không gọi API) */}
-          <form
-            className="bg-white shadow-md rounded-xl p-6 flex flex-col gap-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert('Đã gửi yêu cầu đặt bàn (demo)');
-            }}
-          >
-            <input className="p-3 border rounded-lg" placeholder="Họ và tên" />
-            <input
-              className="p-3 border rounded-lg"
-              placeholder="Số điện thoại"
-            />
-            <input
-              className="p-3 border rounded-lg"
-              placeholder="Số lượng người"
-            />
-            <input type="datetime-local" className="p-3 border rounded-lg" />
-            <textarea
-              className="p-3 border rounded-lg"
-              placeholder="Ghi chú (nếu có)"
-              rows={3}
-            />
-            <button
-              type="submit"
-              className="bg-[#FF6B35] text-white py-3 rounded-xl font-bold hover:bg-orange-600 transition cursor-pointer"
-            >
-              Đặt bàn ngay
-            </button>
-          </form>
+          <BookingForm />
         </div>
       </section>
     </div>

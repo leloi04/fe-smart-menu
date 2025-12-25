@@ -61,6 +61,26 @@ const getMenuAPI = (query: string) => {
   return axios.get<IBackendRes<IModalPaginate<IMenuModal>>>(urlBackend);
 };
 
+const createUserAPI = (payload: any) => {
+  const urlBackend = `/users`;
+  return axios.post<IBackendRes<any>>(urlBackend, payload);
+};
+
+const updateUserAPI = (_id: string, payload: any) => {
+  const urlBackend = `/users/${_id}`;
+  return axios.patch<IBackendRes<any>>(urlBackend, payload);
+};
+
+const deleteUserAPI = (_id: string) => {
+  const urlBackend = `/users/${_id}`;
+  return axios.delete<IBackendRes<any>>(urlBackend);
+};
+
+const updateUserPasswordAPI = (payload: any) => {
+  const urlBackend = `/users/update-password`;
+  return axios.post<IBackendRes<any>>(urlBackend, payload);
+};
+
 // Order API service
 const getOrdersAPI = (query: string) => {
   const urlBackend = `/orders?${query}`;
@@ -143,6 +163,21 @@ const getTableAllAPI = (query: string) => {
   return axios.get<IBackendRes<IModalPaginate<ITableModal>>>(urlBackend);
 };
 
+const createTableAPI = (payload: any) => {
+  const urlBackend = `/tables`;
+  return axios.post<IBackendRes<any>>(urlBackend, payload);
+};
+
+const updateTableAPI = (id: string, payload: any) => {
+  const urlBackend = `/tables/${id}`;
+  return axios.patch<IBackendRes<ITableModal>>(urlBackend, payload);
+};
+
+const deleteTableAPI = (_id: string) => {
+  const urlBackend = `/tables/${_id}`;
+  return axios.delete<IBackendRes<any>>(urlBackend);
+};
+
 // Menu API
 const getCategoryAPI = () => {
   const urlBackend = `/menus/category`;
@@ -164,16 +199,94 @@ const fetchMenuItemsAPI = () => {
   return axios.post<IBackendRes<IMenuModal>>(urlBackend);
 };
 
+const createMenuAPI = (payload: any) => {
+  const urlBackend = `/menus`;
+  return axios.post<IBackendRes<any>>(urlBackend, payload);
+};
+
+const deleteMenuAPI = (_id: string) => {
+  const urlBackend = `/menus/${_id}`;
+  return axios.delete<IBackendRes<any>>(urlBackend);
+};
+
+const updateMenuAPI = (_id: string, payload: any) => {
+  const urlBackend = `/menus/${_id}`;
+  return axios.patch<IBackendRes<any>>(urlBackend, payload);
+};
+
 // Pre-Order
 const createPreOrderAPI = (payload: any) => {
   const urlBackend = `/pre-order`;
   return axios.post<IBackendRes<any>>(urlBackend, payload);
 };
 
+const fetchPreOrderUncompleted = () => {
+  const urlBackend = `/pre-order/uncompleted`;
+  return axios.post<IBackendRes<any>>(urlBackend);
+};
+
+const fetchPreOrderCompleted = () => {
+  const urlBackend = `/pre-order/completed`;
+  return axios.post<IBackendRes<any>>(urlBackend);
+};
+
+const completePreOrderAPI = (id: string) => {
+  const urlBackend = `/pre-order/completed-pre-order`;
+  return axios.post<IBackendRes<any>>(urlBackend, { id });
+};
+
+const getPreOrderAPI = (id: string) => {
+  const urlBackend = `/pre-order/${id}`;
+  return axios.get<IBackendRes<IPreOrder>>(urlBackend);
+};
+
 // Reservation Table API
 const getReservationsTableAPI = (query: string) => {
   const urlBackend = `/reservations?${query}`;
   return axios.get<IBackendRes<IModalPaginate<IReservation>>>(urlBackend);
+};
+
+const getPreBookedTableUpComingAPI = (query: string) => {
+  const urlBackend = `/reservations/pre-booked-table-upcoming?${query}`;
+  return axios.post<IBackendRes<IModalPaginate<IReservation>>>(urlBackend);
+};
+
+const fetchReservationDataInStatusAPI = (
+  status: string,
+  customerPhone: string,
+) => {
+  const urlBackend = `/reservations/data-in-status`;
+  return axios.post<IBackendRes<IReservation[]>>(urlBackend, {
+    status,
+    customerPhone,
+  });
+};
+
+const checkInTableAPI = (reservationId: string) => {
+  const urlBackend = `/reservations/check-in-table`;
+  return axios.post<IBackendRes<IReservation[]>>(urlBackend, {
+    reservationId,
+  });
+};
+
+const cancelTableReservationAPI = (reservationId: string) => {
+  const urlBackend = `/reservations/cancel-reservation`;
+  return axios.post<IBackendRes<IReservation[]>>(urlBackend, {
+    reservationId,
+  });
+};
+
+const validateReservationAPI = (
+  date: string,
+  timeSlot: string,
+  tableId: string,
+) => {
+  const urlBackend = `/reservations/valid-reservation`;
+  return axios.post<IBackendRes<any>>(urlBackend, {
+    date,
+    timeSlot,
+    tableId,
+  });
 };
 
 // Payment API
@@ -183,6 +296,15 @@ const createPaymentBankAPI = (orderId: string, amount: number) => {
     orderId,
     amount,
   });
+};
+
+const handlePaymentSuccess = (id: string) => {
+  const urlBackend = `/payments/handle-payment-success`;
+  return axios.post<IBackendRes<any>>(urlBackend, { id });
+};
+
+const vnpayReturnAPI = () => {
+  return axios.post(`/payments/vnpay-return${window.location.search}`);
 };
 
 export {
@@ -211,4 +333,25 @@ export {
   getReservationsTableAPI,
   updateFileAPI,
   createPaymentBankAPI,
+  fetchReservationDataInStatusAPI,
+  checkInTableAPI,
+  cancelTableReservationAPI,
+  fetchPreOrderUncompleted,
+  fetchPreOrderCompleted,
+  completePreOrderAPI,
+  handlePaymentSuccess,
+  vnpayReturnAPI,
+  updateTableAPI,
+  getPreBookedTableUpComingAPI,
+  validateReservationAPI,
+  createMenuAPI,
+  deleteMenuAPI,
+  updateMenuAPI,
+  createTableAPI,
+  deleteTableAPI,
+  createUserAPI,
+  deleteUserAPI,
+  updateUserAPI,
+  updateUserPasswordAPI,
+  getPreOrderAPI,
 };

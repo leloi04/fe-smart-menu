@@ -27,7 +27,15 @@ import TableStatusPage from './pages/staff/manager.table';
 import BillManagementPage from './pages/staff/manager.bill';
 import VNPayReturnPage from './pages/clients/payment/payment';
 import ProfilePage from './pages/clients/profile';
-import ManageReservationTablePage from 'pages/clients/menu';
+import DeliverOrderManagement from './pages/staff/manager.deliver';
+import ThankYouPage from './pages/clients/payment/thankyou';
+import ManageScheduleTablePage from './pages/staff/manager.schedule';
+import ManageReservationTablePage from './pages/admin/manager.reservation';
+import Dashboard from './pages/admin/dashboard';
+import ProtectedCustomer from './components/auth/protected.customer';
+import ProtectedChef from './components/auth/protected.chef';
+import ProtectedStaff from './components/auth/protected.staff';
+import ProtectedAdmin from './components/auth/protected.admin';
 
 let router = createBrowserRouter([
   {
@@ -35,32 +43,146 @@ let router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: '/menu', element: <ManageReservationTablePage /> },
       { path: '/rate', element: <RatePage /> },
-      { path: '/reservation', element: <ReservationPage /> },
-      { path: '/pre-order', element: <PreOrderPage /> },
-      { path: '/cart', element: <OrderTabs /> },
-      { path: '/profile', element: <ProfilePage /> },
+      {
+        path: '/reservation',
+        element: (
+          <ProtectedCustomer>
+            <ReservationPage />
+          </ProtectedCustomer>
+        ),
+      },
+      {
+        path: '/pre-order',
+        element: (
+          <ProtectedCustomer>
+            <PreOrderPage />
+          </ProtectedCustomer>
+        ),
+      },
+      {
+        path: '/cart',
+        element: (
+          <ProtectedCustomer>
+            <OrderTabs />
+          </ProtectedCustomer>
+        ),
+      },
+      {
+        path: '/profile',
+        element: (
+          <ProtectedCustomer>
+            <ProfilePage />
+          </ProtectedCustomer>
+        ),
+      },
     ],
   },
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
   { path: '/payments', element: <VNPayReturnPage /> },
+  { path: '/payments/success', element: <ThankYouPage /> },
   { path: '/tables/:tableNumber', element: <OrderPage /> },
-  { path: '/chef', element: <ChefKitchenPage /> },
-  { path: '/staff', element: <StaffPage /> },
-  { path: '/staff/tables', element: <TableStatusPage /> },
-  { path: '/staff/bills', element: <BillManagementPage /> },
+  {
+    path: '/chef',
+    element: (
+      <ProtectedChef>
+        <ChefKitchenPage />
+      </ProtectedChef>
+    ),
+  },
+  {
+    path: '/staff',
+    element: (
+      <ProtectedStaff>
+        <StaffPage />
+      </ProtectedStaff>
+    ),
+  },
+  {
+    path: '/staff/tables',
+    element: (
+      <ProtectedStaff>
+        <TableStatusPage />
+      </ProtectedStaff>
+    ),
+  },
+  {
+    path: '/staff/bills',
+    element: (
+      <ProtectedStaff>
+        <BillManagementPage />
+      </ProtectedStaff>
+    ),
+  },
+  {
+    path: '/staff/delivers',
+    element: (
+      <ProtectedStaff>
+        <DeliverOrderManagement />
+      </ProtectedStaff>
+    ),
+  },
+  {
+    path: '/staff/schedules',
+    element: (
+      <ProtectedStaff>
+        <ManageScheduleTablePage />
+      </ProtectedStaff>
+    ),
+  },
   {
     path: '/admin',
     element: <AdminLayout />,
     children: [
-      { index: true, element: <div>123</div> },
-      { path: '/admin/menu', element: <ManageMenuPage /> },
-      { path: '/admin/tables', element: <ManageTablePage /> },
-      { path: '/admin/orders', element: <ManageOrderPage /> },
-      { path: '/admin/reservations', element: <ManageReservationTablePage /> },
-      { path: '/admin/users', element: <ManageUserPage /> },
+      {
+        index: true,
+        element: (
+          <ProtectedAdmin>
+            <Dashboard />
+          </ProtectedAdmin>
+        ),
+      },
+      {
+        path: '/admin/menu',
+        element: (
+          <ProtectedAdmin>
+            <ManageMenuPage />
+          </ProtectedAdmin>
+        ),
+      },
+      {
+        path: '/admin/tables',
+        element: (
+          <ProtectedAdmin>
+            <ManageTablePage />
+          </ProtectedAdmin>
+        ),
+      },
+      {
+        path: '/admin/orders',
+        element: (
+          <ProtectedAdmin>
+            <ManageOrderPage />
+          </ProtectedAdmin>
+        ),
+      },
+      {
+        path: '/admin/reservations',
+        element: (
+          <ProtectedAdmin>
+            <ManageReservationTablePage />
+          </ProtectedAdmin>
+        ),
+      },
+      {
+        path: '/admin/users',
+        element: (
+          <ProtectedAdmin>
+            <ManageUserPage />
+          </ProtectedAdmin>
+        ),
+      },
     ],
   },
 ]);

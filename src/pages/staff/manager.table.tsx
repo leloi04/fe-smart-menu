@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Users } from 'lucide-react';
-import StaffLayout from '@/components/layout/chef/layouts/StaffLayout';
 import { Select } from 'antd';
-import { getAllTableAPI } from '@/services/api';
+
+import StaffLayout from '@/components/layout/chef/layouts/StaffLayout';
+import { getAllTableAPI, updateTableAPI } from '@/services/api';
 
 const STATUS_OPTIONS = [
   { value: 'empty', label: 'Trống' },
@@ -10,39 +11,55 @@ const STATUS_OPTIONS = [
   { value: 'cleaning', label: 'Đang dọn' },
 ];
 
-const BACKGROUND_COLORS: any = {
+const BACKGROUND_COLORS: Record<string, string> = {
   empty: 'bg-green-100 text-green-600',
   occupied: 'bg-red-100 text-red-600',
   cleaning: 'bg-yellow-100 text-yellow-600',
 };
 
-const BORDER_COLORS: any = {
+const BORDER_COLORS: Record<string, string> = {
   empty: 'border-green-300',
   occupied: 'border-red-300',
   cleaning: 'border-yellow-300',
 };
 
+interface TableItem {
+  id: string;
+  number: number;
+  seats: number;
+  status: string;
+}
+
 const TableStatusPage = () => {
-  const [tables, setTables] = useState<any[]>([]);
+  const [tables, setTables] = useState<TableItem[]>([]);
 
   useEffect(() => {
     const fetchTable = async () => {
       const res = await getAllTableAPI();
-      if (res.data) {
-        const tables = res.data.map((table) => ({
-          id: table._id,
-          number: table.tableNumber,
-          seats: table.seats,
-          status: table.status,
-        }));
-        setTables(tables);
+      if (res?.data) {
+        setTables(
+          res.data.map((table: any) => ({
+            id: table._id,
+            number: table.tableNumber,
+            seats: table.seats,
+            status: table.status,
+          })),
+        );
       }
     };
 
     fetchTable();
   }, []);
 
-  const updateStatus = (id: string, newStatus: string) => {
+  const updateStatus = async (
+    id: string,
+    tableNumber: number,
+    oldStatus: string,
+    newStatus: string,
+  ) => {
+    console.log(`Bàn ${tableNumber} có ${id}: ${oldStatus} → ${newStatus}`);
+    await updateTableAPI(id, { status: newStatus });
+
     setTables((prev) =>
       prev.map((table) =>
         table.id === id ? { ...table, status: newStatus } : table,
@@ -78,9 +95,14 @@ const TableStatusPage = () => {
 
                 <Select
                   value={table.status}
-                  onChange={(value) => updateStatus(table.id, value)}
-                  options={STATUS_OPTIONS}
-                  className={`rounded-full text-center font-medium px-3 py-1 w-35 ${
+                  options={STATUS_OPTIONS.map((opt) => ({
+                    ...opt,
+                    disabled: opt.value === 'occupied', // ❌ không cho chọn
+                  }))}
+                  onChange={(value) =>
+                    updateStatus(table.id, table.number, table.status, value)
+                  }
+                  className={`rounded-full text-center font-medium px-3 py-1 w-36 ${
                     BACKGROUND_COLORS[table.status]
                   }`}
                 />

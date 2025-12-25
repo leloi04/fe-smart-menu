@@ -1,4 +1,5 @@
-import { logoutAPI } from '@/services/api';
+import { useCurrentApp } from '@/components/context/app.context';
+import { message } from 'antd';
 import {
   Calendar,
   Home,
@@ -13,18 +14,19 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 function AppHeader() {
+  const { logout } = useCurrentApp();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
   const handleLogout = () => {
-    logoutAPI();
+    message.success('Đăng xuất thành công');
+    logout();
     navigate('/login');
   };
 
   const navItems = [
     { path: '/', icon: Home, label: 'Trang chủ' },
-    { path: '/menu', icon: UtensilsCrossed, label: 'Thực đơn' },
     { path: '/reservation', icon: Calendar, label: 'Đặt bàn' },
     { path: '/pre-order', icon: ShoppingCart, label: 'Đặt món' },
     { path: '/cart', icon: ShoppingBag, label: 'Giỏ hàng' },

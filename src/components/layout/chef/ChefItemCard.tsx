@@ -1,10 +1,9 @@
 // ChefItemCard.tsx
 import { Card, Button, Tag, Space } from 'antd';
-import { Clock, PlayCircle, CheckCircle, Utensils } from 'lucide-react';
+import { Clock, CheckCircle, Utensils } from 'lucide-react';
 import { formatTime, getKitchenAreaLabel } from '@/utils/helpers';
 import type { KitchenArea } from '@/types';
 import { socket } from '@/services/socket';
-import { data } from 'framer-motion/client';
 
 interface ChefItemCardProps {
   item: {

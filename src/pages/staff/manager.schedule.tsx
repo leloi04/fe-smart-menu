@@ -1,4 +1,7 @@
-import { getReservationsTableAPI } from '@/services/api';
+import {
+  cancelTableReservationAPI,
+  getPreBookedTableUpComingAPI,
+} from '@/services/api';
 import {
   ProTable,
   type ProColumns,
@@ -7,7 +10,6 @@ import {
 import { Tag, Space, Button, Popconfirm, message } from 'antd';
 import {
   EyeOutlined,
-  DeleteOutlined,
   PhoneOutlined,
   UserOutlined,
   CalendarOutlined,
@@ -15,14 +17,15 @@ import {
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useRef, useState } from 'react';
+import dayjs from 'dayjs';
+import StaffLayout from '@/components/layout/chef/layouts/StaffLayout';
 import CreateReservation from '@/components/admin/reservation/create.reservation';
 
 const PRIMARY = '#FF6B35';
 
-const ManageReservationTablePage = () => {
+const ManageScheduleTablePage = () => {
   const actionRef = useRef<ActionType | null>(null);
   const [openModal, setOpenModal] = useState<boolean>(false);
-
   const [meta, setMeta] = useState({
     current: 1,
     pageSize: 10,
@@ -34,9 +37,10 @@ const ManageReservationTablePage = () => {
   };
 
   // === Xóa đặt bàn ===
-  const handleDelete = async (id: string) => {
-    console.log(id);
-    message.success('Đã xóa phiếu đặt bàn!');
+  const handleDelete = async (id: string, customerName: string) => {
+    if (!id) return;
+    await cancelTableReservationAPI(id);
+    message.success(`Đã hủy đặt bàn cho khách tên ${customerName}`);
     refreshTable();
   };
 
@@ -139,6 +143,15 @@ const ManageReservationTablePage = () => {
       width: 130,
       render: (_, entity) => statusColor(entity.status),
     },
+
+    {
+      title: 'Ngày tạo',
+      dataIndex: 'createdAt',
+      width: 180,
+      valueType: 'dateTime',
+      render: (_, entity) => dayjs(entity.createdAt).format('DD/MM/YYYY HH:mm'),
+    },
+
     {
       title: 'Hành động',
       width: 120,
@@ -152,13 +165,15 @@ const ManageReservationTablePage = () => {
           />
 
           <Popconfirm
-            title="Xóa đặt bàn?"
-            description="Bạn chắc chắn muốn xóa lịch đặt bàn này?"
-            okText="Xóa"
+            title="Hủy lịch đặt bàn?"
+            description="Bạn chắc chắn muốn hủy lịch đặt bàn này?"
+            okText="Hủy đặt bàn"
             cancelText="Hủy"
-            onConfirm={() => handleDelete(entity._id)}
+            onConfirm={() => handleDelete(entity._id, entity.customerName)}
           >
-            <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} />
+            <button className="px-3 py-2 bg-red-100 text-red-600 rounded-lg cursor-pointer">
+              Hủy
+            </button>
           </Popconfirm>
         </Space>
       ),
@@ -166,7 +181,7 @@ const ManageReservationTablePage = () => {
   ];
 
   return (
-    <>
+    <StaffLayout>
       <ProTable
         columns={columns}
         actionRef={actionRef}
@@ -183,7 +198,7 @@ const ManageReservationTablePage = () => {
           if (params.status) query += `&status=${params.status}`;
           if (params.date) query += `&date=${params.date}`;
 
-          const res = await getReservationsTableAPI(query);
+          const res = await getPreBookedTableUpComingAPI(query);
 
           const result = res?.data?.result || [];
           const metaApi = res?.data?.meta || {};
@@ -226,8 +241,8 @@ const ManageReservationTablePage = () => {
         setOpenModal={setOpenModal}
         refreshTable={refreshTable}
       />
-    </>
+    </StaffLayout>
   );
 };
 
-export default ManageReservationTablePage;
+export default ManageScheduleTablePage;

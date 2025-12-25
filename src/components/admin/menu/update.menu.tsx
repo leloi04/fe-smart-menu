@@ -1,9 +1,10 @@
-import { createMenuAPI, updateFileAPI } from '@/services/api';
+import { updateMenuAPI, updateFileAPI } from '@/services/api';
 import {
   Button,
   Col,
   Divider,
   Form,
+  Input,
   message,
   Modal,
   Row,
@@ -20,16 +21,19 @@ import {
   ProFormSelect,
   ProFormList,
 } from '@ant-design/pro-components';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { UploadRequestOption as RcCustomRequestOptions } from 'rc-upload/es/interface';
 
 interface IProps {
+  menuData: any;
+  setMenuData: (v: any) => void;
   openModal: boolean;
   setOpenModal: (v: boolean) => void;
   refreshTable: () => void;
 }
 
 type FieldType = {
+  _id: string;
   name: string;
   description: string;
   price: number;
@@ -41,12 +45,44 @@ type FieldType = {
   kitchenArea: string;
 };
 
-const CreateMenu = (props: IProps) => {
-  const { openModal, setOpenModal, refreshTable } = props;
+const UpdateMenu = (props: IProps) => {
+  const { openModal, setOpenModal, refreshTable, menuData } = props;
   const [isSubmit, setIsSubmit] = useState(false);
   const [fileListThumbnail, setFileListThumbnail] = useState<UploadFile[]>([]);
   const [thumbnailImage, setThumbnailImage] = useState('');
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (!menuData || !openModal) return;
+
+    form.setFieldsValue({
+      _id: menuData._id,
+      name: menuData.name,
+      description: menuData.description,
+      price: menuData.price,
+      category: menuData.category,
+      status: menuData.status,
+      kitchenArea: menuData.kitchenArea,
+      ingredients: (menuData.ingredients || []).map((i: string) => ({
+        name: i,
+      })),
+      variants: menuData.variants || [],
+      toppings: menuData.toppings || [],
+    });
+
+    if (menuData.image) {
+      const file: UploadFile = {
+        uid: '-1',
+        name: menuData.image,
+        status: 'done',
+        url: `${import.meta.env.VITE_BACKEND_URL}/images/menu/${
+          menuData.image
+        }`,
+      };
+      setFileListThumbnail([file]);
+      setThumbnailImage(menuData.image);
+    }
+  }, [menuData, openModal]);
 
   const handleCancel = () => {
     setOpenModal(false);
@@ -108,6 +144,7 @@ const CreateMenu = (props: IProps) => {
       setIsSubmit(true);
 
       const {
+        _id,
         name,
         description,
         price,
@@ -132,13 +169,10 @@ const CreateMenu = (props: IProps) => {
         image: thumbnailImage ?? '',
       };
 
-      const res = await createMenuAPI(payload);
+      const res = await updateMenuAPI(_id, payload);
 
       if (res?.data) {
-        message.success('Thêm mới món thành công!');
-        form.resetFields();
-        setThumbnailImage('');
-        setFileListThumbnail([]);
+        message.success('Cập nhật món thành công!');
         setOpenModal(false);
         refreshTable();
       } else {
@@ -148,7 +182,7 @@ const CreateMenu = (props: IProps) => {
       console.error(error);
       message.error('Có lỗi xảy ra khi thêm món');
     } finally {
-      setIsSubmit(false); // 🔥 QUAN TRỌNG
+      setIsSubmit(false);
     }
   };
 
@@ -168,12 +202,12 @@ const CreateMenu = (props: IProps) => {
           loading={isSubmit}
           onClick={() => form.submit()}
         >
-          Thêm
+          Cập nhật
         </Button>,
       ]}
     >
       <div className="heading">
-        <h2 className="text text-large">Thêm mới món ăn</h2>
+        <h2 className="text text-large">Cập nhật món ăn</h2>
         <Divider />
       </div>
 
@@ -183,6 +217,9 @@ const CreateMenu = (props: IProps) => {
         onFinish={onFinish}
         layout="vertical"
       >
+        <Form.Item<FieldType> label="ID" name="_id" hidden>
+          <Input disabled />
+        </Form.Item>
         <Row gutter={16}>
           <Col span={12}>
             <ProFormText
@@ -370,4 +407,4 @@ const CreateMenu = (props: IProps) => {
   );
 };
 
-export default CreateMenu;
+export default UpdateMenu;

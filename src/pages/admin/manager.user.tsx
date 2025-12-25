@@ -1,4 +1,4 @@
-import { getUserAPI } from '@/services/api';
+import { deleteUserAPI, getUserAPI } from '@/services/api';
 import {
   ProTable,
   type ProColumns,
@@ -11,15 +11,17 @@ import {
   PhoneOutlined,
   UserOutlined,
   MailOutlined,
-  CrownOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 import { useRef, useState } from 'react';
 import dayjs from 'dayjs';
+import CreateUser from '@/components/admin/user/create.user';
 
 const PRIMARY = '#FF6B35';
 
 const ManageUserPage = () => {
   const actionRef = useRef<ActionType | null>(null);
+  const [openModal, setOpenModal] = useState<boolean>(false);
 
   const [meta, setMeta] = useState({
     current: 1,
@@ -27,10 +29,16 @@ const ManageUserPage = () => {
     total: 0,
   });
 
+  const refreshTable = () => {
+    actionRef.current?.reload();
+  };
+
   // === Xóa user ===
   const handleDelete = async (id: string) => {
+    if (!id) return;
+    await deleteUserAPI(id);
     message.success('Đã xoá người dùng!');
-    actionRef.current?.reload();
+    refreshTable();
   };
 
   // === Tag role màu sắc ===
@@ -131,6 +139,13 @@ const ManageUserPage = () => {
             onClick={() => message.info('Xem chi tiết (chưa làm modal)')}
           />
 
+          <EditOutlined
+            style={{ cursor: 'pointer', color: PRIMARY }}
+            onClick={() => {
+              console.log();
+            }}
+          />
+
           <Popconfirm
             title="Xóa người dùng?"
             okText="Xóa"
@@ -145,57 +160,65 @@ const ManageUserPage = () => {
   ];
 
   return (
-    <ProTable
-      columns={columns}
-      actionRef={actionRef}
-      rowKey="_id"
-      headerTitle="Quản lý người dùng"
-      cardBordered
-      request={async (params) => {
-        let query = `current=${params.current}&pageSize=${params.pageSize}`;
+    <>
+      <ProTable
+        columns={columns}
+        actionRef={actionRef}
+        rowKey="_id"
+        headerTitle="Quản lý người dùng"
+        cardBordered
+        request={async (params) => {
+          let query = `current=${params.current}&pageSize=${params.pageSize}`;
 
-        if (params.name) query += `&name=/${params.name}/i`;
-        if (params.email) query += `&email=/${params.email}/i`;
-        if (params.phone) query += `&phone=/${params.phone}/i`;
-        if (params.role) query += `&role=${params.role}`;
+          if (params.name) query += `&name=/${params.name}/i`;
+          if (params.email) query += `&email=/${params.email}/i`;
+          if (params.phone) query += `&phone=/${params.phone}/i`;
+          if (params.role) query += `&role=${params.role}`;
 
-        const res = await getUserAPI(query);
+          const res = await getUserAPI(query);
 
-        const result = res?.data?.result || [];
-        const metaApi = res?.data?.meta || {};
+          const result = res?.data?.result || [];
+          const metaApi = res?.data?.meta || {};
 
-        setMeta({
-          current: params.current || 1,
-          pageSize: params.pageSize || 10,
-          total: metaApi.total || 0,
-        });
+          setMeta({
+            current: params.current || 1,
+            pageSize: params.pageSize || 10,
+            total: metaApi.total || 0,
+          });
 
-        return {
-          data: result,
-          success: true,
-          total: metaApi.total || 0,
-        };
-      }}
-      pagination={{
-        current: meta.current,
-        pageSize: meta.pageSize,
-        total: meta.total,
-        showSizeChanger: true,
-      }}
-      toolBarRender={() => [
-        <Button
-          key="refresh"
-          style={{
-            background: PRIMARY,
-            borderColor: PRIMARY,
-            color: '#fff',
-          }}
-          onClick={() => actionRef.current?.reload()}
-        >
-          Làm mới
-        </Button>,
-      ]}
-    />
+          return {
+            data: result,
+            success: true,
+            total: metaApi.total || 0,
+          };
+        }}
+        pagination={{
+          current: meta.current,
+          pageSize: meta.pageSize,
+          total: meta.total,
+          showSizeChanger: true,
+        }}
+        toolBarRender={() => [
+          <Button
+            key="refresh"
+            style={{
+              background: PRIMARY,
+              borderColor: PRIMARY,
+              color: '#fff',
+            }}
+            onClick={() => setOpenModal(true)}
+          >
+            Thêm tài khoản
+          </Button>,
+        ]}
+      />
+
+      <CreateUser
+        openModal={openModal}
+        setOpenModal={setOpenModal}
+        refreshTable={refreshTable}
+      />
+    </>
   );
 };
 

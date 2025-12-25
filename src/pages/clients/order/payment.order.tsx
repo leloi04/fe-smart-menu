@@ -1,7 +1,6 @@
 import { createPaymentBankAPI, fetchMenuItemsAPI } from '@/services/api';
 import { CreditCard, Landmark } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 interface IProps {
   open: boolean;
@@ -15,7 +14,6 @@ export default function PaymentOrderSummary(props: IProps) {
   const { amount, dataOrder, open, setOpen, orderId } = props;
   const [showCardPopup, setShowCardPopup] = useState(false);
   const [orderItems, setOrderItems] = useState<any[]>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!open) return;

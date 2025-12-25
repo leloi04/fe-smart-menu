@@ -33,7 +33,7 @@ declare global {
         name: string;
       };
       avatar?: string;
-      id: string;
+      _id: string;
     };
   }
 
@@ -156,5 +156,49 @@ declare global {
     status: string;
     createdAt: Date;
     expiredAt: Date;
+  }
+
+  interface IPreOrder {
+    _id: string;
+    customerId: string;
+    orderItems: {
+      variant: {
+        _id: string;
+        size: string;
+        price: number;
+      };
+      menuItemId: string;
+      name: string;
+      quantity: number;
+      toppings: {
+        _id: string;
+        name: string;
+        price: number;
+      }[];
+      _id: string;
+      kitchenArea: KitchenArea;
+    }[];
+    totalPrice: number;
+    paymentStatus: string;
+    progressStatus: string;
+    customers: {
+      userId: string;
+      name: string;
+      isGuest: boolean;
+      _id: string;
+    }[];
+    totalItemPrice: number;
+    totalPayment: number;
+    method: string;
+    deliveryAddress: string;
+    pickupTime: string;
+    paymentStatus: string;
+    tracking: {
+      status: string;
+      timestamp: Date;
+      _id: string;
+    }[];
+    payment: string;
+    note: string;
   }
 }

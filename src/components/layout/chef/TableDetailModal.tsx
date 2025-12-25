@@ -3,7 +3,7 @@ import type { Order } from '@/types';
 import { formatTime, formatTimeShort } from '@/utils/helpers';
 import { Modal, Tag, Divider } from 'antd';
 import { Package, Clock } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface TableDetailModalProps {
   tableNumber?: string;
@@ -27,7 +27,6 @@ export default function TableDetailModal(props: TableDetailModalProps) {
     socket.emit('getDetailTable', tableNumber);
 
     socket.on('detailTableData', (data) => {
-      console.log('data: ', data);
       setFirstOrderItems(data.firstOrder.orderItems || []);
       setAddedOrderBatches(data.addOrders || []);
       setCompletedOrderItemsSocket(data.completedOrders || []);
@@ -117,8 +116,6 @@ export default function TableDetailModal(props: TableDetailModalProps) {
       )}
     </div>
   );
-
-  console.log('addedOrderBatches: ', addedOrderBatches);
 
   return (
     <Modal

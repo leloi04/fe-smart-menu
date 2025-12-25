@@ -5,7 +5,7 @@ import { useCart } from '@/components/context/cart.context';
 import { useNavigate } from 'react-router-dom';
 
 function PreOrderPage() {
-  const { cartCount, totalPrice, cart } = useCart();
+  const { cartCount, totalPrice } = useCart();
   const [open, setOpen] = useState<boolean>(false);
   const [dataItem, setDataItem] = useState<IMenuModal | null>(null);
   const [searchQuery, setSearchQuery] = useState(''); // search theo tên

@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { getMenuAPI } from '@/services/api';
-import { s } from 'framer-motion/client';
 import type { KitchenArea } from '@/types/global';
 import { message } from 'antd';
 import OrderDetailModal from './modal.order';
 import PaymentOrderSummary from './payment.order';
+import { socket } from '@/services/socket';
 
 type Variant = { size: string; price: number; _id: string };
 type Topping = { name: string; price: number; _id: string };
@@ -47,10 +46,6 @@ type OrderItem = {
   kitchenArea?: KitchenArea;
 };
 
-const socket: Socket = io(
-  import.meta.env.VITE_BACKEND_URL || 'http://localhost:8081',
-);
-
 const MenuOrder = (props: IProps) => {
   const { currentOrderId, tableData, userInfo, setStep, setUserInfo } = props;
   const [open, setOpen] = useState<boolean>(false);
@@ -70,9 +65,6 @@ const MenuOrder = (props: IProps) => {
   const [progressStatus, setProgressStatus] = useState<
     'pending_confirmation' | 'processing' | 'completed' | 'draft'
   >('draft');
-  const [paymentStatus, setPaymentStatus] = useState<'unpaid' | 'paid' | null>(
-    null,
-  );
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<IOrderModal | null>(null);

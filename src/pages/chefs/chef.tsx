@@ -1,17 +1,12 @@
 // ChefPage.tsx
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Select, Empty } from 'antd';
 import { ChefHat } from 'lucide-react';
 import { getKitchenAreaLabel } from '@/utils/helpers';
 import ChefLayout from '@/components/layout/chef/layouts/ChefLayout';
 import ChefItemCard from '@/components/layout/chef/ChefItemCard';
 import type { KitchenArea } from '@/types/global';
-import { io, type Socket } from 'socket.io-client';
-import { pre } from 'framer-motion/client';
-
-const socket: Socket = io(
-  import.meta.env.VITE_BACKEND_URL || 'http://localhost:8081',
-);
+import { socket } from '@/services/socket';
 
 const kitchenAreas: KitchenArea[] = ['HOT', 'GRILL', 'COLD', 'DRINK'];
 

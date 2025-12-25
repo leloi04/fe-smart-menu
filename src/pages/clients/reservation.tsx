@@ -26,7 +26,6 @@ export default function BookingPage() {
   const customerPhone = user?.phone || '';
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   // Socket realtime
   useEffect(() => {
@@ -340,19 +339,6 @@ export default function BookingPage() {
           </div>
         </div>
       </div>
-
-      {/* SUCCESS MODAL */}
-      {showSuccess && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full mx-auto flex items-center justify-center mb-4">
-              <CheckCircle2 className="w-10 h-10 text-green-600" />
-            </div>
-            <h3 className="text-2xl font-bold mb-2">Đặt bàn thành công!</h3>
-            <p className="text-gray-600">Chúng tôi đã nhận yêu cầu đặt bàn.</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

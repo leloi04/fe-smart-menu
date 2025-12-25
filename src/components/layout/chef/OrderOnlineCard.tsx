@@ -1,7 +1,8 @@
-import { Card, Tag, Badge } from 'antd';
+import { Card, Tag } from 'antd';
 import { Clock, User, Package } from 'lucide-react';
-import { formatTime, getStatusBadge } from '@/utils/helpers';
-import type { Order } from '@/types';
+import { formatTime } from '@/utils/helpers';
+import { useEffect, useState } from 'react';
+import { getPreOrderAPI } from '@/services/api';
 
 interface OrderOnlineCardProps {
   order: {
@@ -12,7 +13,7 @@ interface OrderOnlineCardProps {
     totalItems: number;
     orderItemsCompleted: any[];
   };
-  onViewDetail: (customerName: string, timestamp: string) => void;
+  onViewDetail: (customerName: string, timestamp: string, order: any) => void;
 }
 
 export default function OrderOnlineCard({
@@ -20,20 +21,35 @@ export default function OrderOnlineCard({
   onViewDetail,
 }: OrderOnlineCardProps) {
   const completedCount = order.orderItemsCompleted.length;
+  const [method, setMethod] = useState<string>('');
+
+  useEffect(() => {
+    const fetchPreOrder = async () => {
+      const res = await getPreOrderAPI(order.id);
+      if (res.data) {
+        setMethod(res.data.method);
+      }
+    };
+
+    fetchPreOrder();
+  }, [order]);
 
   return (
     <Card
       hoverable
       className="shadow-md hover:shadow-xl transition-all"
       onClick={() =>
-        onViewDetail(order.customerName, order.createdAt.toISOString())
+        onViewDetail(order.customerName, order.createdAt.toISOString(), order)
       }
     >
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Tag color="blue" className="text-base font-bold px-3 py-1">
-              Order - {order.id}
+              Order - {order.id.slice(-6).toUpperCase()}
+            </Tag>
+            <Tag color="purple" className="text-base font-bold px-3 py-1">
+              {method}
             </Tag>
           </div>
         </div>
@@ -45,7 +61,9 @@ export default function OrderOnlineCard({
 
         <div className="flex items-center gap-2 text-gray-600">
           <Package size={16} />
-          <span>{order.orderItems.length} món</span>
+          <span>
+            {[...order.orderItems, ...order.orderItemsCompleted].length} món
+          </span>
           {completedCount > 0 && (
             <>
               <span className="text-gray-400">•</span>
@@ -55,12 +73,14 @@ export default function OrderOnlineCard({
         </div>
 
         <div className="text-sm text-gray-500 border-t pt-2">
-          {order.orderItems.slice(0, 3).map((item) => (
-            <div key={item.id} className="truncate">
-              • {item.name} x {item.quantity}
-            </div>
-          ))}
-          {order.orderItems.length > 3 && (
+          {[...order.orderItems, ...order.orderItemsCompleted]
+            .slice(0, 3)
+            .map((item) => (
+              <div key={item.id} className="truncate">
+                • {item.name} x {item.quantity}
+              </div>
+            ))}
+          {[...order.orderItems, ...order.orderItemsCompleted].length > 3 && (
             <div className="text-gray-400">
               ... và {order.orderItems.length - 3} món khác
             </div>

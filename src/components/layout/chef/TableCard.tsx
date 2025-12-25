@@ -1,4 +1,3 @@
-import type { Order } from '@/types';
 import { formatTime } from '@/utils/helpers';
 import { Card, Tag, Progress } from 'antd';
 import { Clock, Users } from 'lucide-react';
@@ -9,8 +8,17 @@ interface TableCardProps {
   onViewDetail: (tableNumber: string, timestamp: string) => void;
 }
 
-export default function TableCard({ tableNumber, orders, onViewDetail }: TableCardProps) {
-  const progress = orders.totalItems > 0 ? Math.round((orders.orderItemsCompleted.length / orders.totalItems) * 100) : 0;
+export default function TableCard({
+  tableNumber,
+  orders,
+  onViewDetail,
+}: TableCardProps) {
+  const progress =
+    orders.totalItems > 0
+      ? Math.round(
+          (orders.orderItemsCompleted.length / orders.totalItems) * 100,
+        )
+      : 0;
 
   return (
     <Card
@@ -34,7 +42,9 @@ export default function TableCard({ tableNumber, orders, onViewDetail }: TableCa
           <Users size={16} />
           <span className="font-medium">{orders.totalItems} món</span>
           <span className="text-gray-400">•</span>
-          <span className="text-sm">{orders.orderItemsCompleted.length} đã xong</span>
+          <span className="text-sm">
+            {orders.orderItemsCompleted.length} đã xong
+          </span>
         </div>
 
         <Progress

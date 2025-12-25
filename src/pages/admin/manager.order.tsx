@@ -20,6 +20,7 @@ const ManageOrderPage = () => {
 
   // Handler xóa / cancel order
   const handleDelete = async (id: string) => {
+    console.log(id);
     message.success('Hủy đơn hàng thành công!');
     actionRef.current?.reload();
   };

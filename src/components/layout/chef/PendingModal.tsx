@@ -159,7 +159,7 @@ export default function PendingModal(props: PendingModalProps) {
       const ordersDineIn = orderTableConfirm.filter((o) => o.id !== orderId);
       message.success(`Đã xác nhận order của bàn ${tableNumber}!`);
       setOrderTableConfirm(ordersDineIn);
-      socket.emit('handleConfirmNotify', {
+      socket.emit('handleConfirmNotifyTable', {
         id: orderId,
         key: 'notification_table_order',
         orderItems,
@@ -185,11 +185,12 @@ export default function PendingModal(props: PendingModalProps) {
       const ordersOnline = orderOnlineConfirm.filter((o) => o.id !== orderId);
       message.success(`Đã xác nhận order khách tên ${customerName}!`);
       setOrderOnlineConfirm(ordersOnline);
-      socket.emit('handleConfirmNotify', {
+      socket.emit('handleConfirmNotifyPreOrder', {
         id: orderId,
-        key: 'notification_pre-order',
+        key: keyRedis,
+        orderItems: orderOnlineConfirm.find((o) => o.id === orderId).orderItems,
+        customerName,
       });
-      await handleConfirmOrderAPI(orderId, { customerName }, status, keyRedis);
     }
   };
 
@@ -213,7 +214,7 @@ export default function PendingModal(props: PendingModalProps) {
           const orderDineIn = orderTableConfirm.filter((o) => o.id !== orderId);
           message.info(`Đơn order của bàn ${tableNumber} đã được hủy!`);
           setOrderTableConfirm(orderDineIn);
-          socket.emit('handleCancelNotify', {
+          socket.emit('handleCancelNotifyTable', {
             id: orderId,
             key: keyRedis,
             batchId,
@@ -234,6 +235,24 @@ export default function PendingModal(props: PendingModalProps) {
               keyRedis,
             );
           }
+        },
+      });
+    } else if (customerName) {
+      Modal.confirm({
+        title: `Xác nhận hủy order của khách tên ${customerName}`,
+        content: 'Bạn có chắc chắn muốn hủy đơn hàng này?',
+        okText: 'Hủy đơn',
+        cancelText: 'Quay lại',
+        okButtonProps: { danger: true },
+        onOk: async () => {
+          const orderDineIn = orderTableConfirm.filter((o) => o.id !== orderId);
+          message.info(`Đơn order của khách tên ${customerName} đã được hủy!`);
+          setOrderTableConfirm(orderDineIn);
+          socket.emit('handleCancelNotifyPreOrder', {
+            id: orderId,
+            key: keyRedis,
+            keyTb: 'notification_pre-order',
+          });
         },
       });
     }
