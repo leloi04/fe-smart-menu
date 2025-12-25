@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UtensilsCrossed } from 'lucide-react';
 import { Button, Card, Input, message } from 'antd';
+import { registerAPI } from '@/services/api';
 
 export const RegisterPage = () => {
   const [email, setEmail] = useState('');
@@ -36,8 +37,9 @@ export const RegisterPage = () => {
 
     setLoading(true);
     try {
+      await registerAPI(name, email, password, phone);
       message.success('Đăng ký thành công');
-      // navigate("/login");
+      navigate('/login');
     } catch (err) {
       message.error('Đăng ký thất bại, thử lại');
     } finally {
