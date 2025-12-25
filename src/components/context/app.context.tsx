@@ -1,6 +1,6 @@
-import { fetchAccountAPI } from "@/services/api";
-import { createContext, useContext, useEffect, useState } from "react";
-import { ScaleLoader } from "react-spinners";
+import { fetchAccountAPI, logoutAPI } from '@/services/api';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { ScaleLoader } from 'react-spinners';
 
 interface IAppContext {
   isAuthenticated: boolean;
@@ -8,6 +8,7 @@ interface IAppContext {
   setUser: (v: IUser | null) => void;
   isLoading: boolean;
   setIsAuthenticated: (v: boolean) => void;
+  logout: () => void;
 }
 
 const CurrentAppContext = createContext<IAppContext | null>(null);
@@ -43,13 +44,22 @@ export const AppProvider = ({ children }: TProp) => {
     fetchAccount();
   }, []);
 
+  const logout = async () => {
+    await logoutAPI();
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('userInfo');
+    localStorage.removeItem('cart');
+  };
+
   return isLoading ? (
     <div
       style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
       }}
     >
       <ScaleLoader />
@@ -62,6 +72,7 @@ export const AppProvider = ({ children }: TProp) => {
         setUser,
         isLoading,
         setIsAuthenticated,
+        logout,
       }}
     >
       {children}
@@ -72,7 +83,7 @@ export const AppProvider = ({ children }: TProp) => {
 export const useCurrentApp = () => {
   const context = useContext(CurrentAppContext);
   if (!context) {
-    throw new Error("useCurrentApp must be used inside <AppProvider>");
+    throw new Error('useCurrentApp must be used inside <AppProvider>');
   }
   return context;
 };

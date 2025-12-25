@@ -1,58 +1,93 @@
-import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { UtensilsCrossed } from "lucide-react";
-import { Button, Card, Input, message } from "antd";
-import { loginAPI } from "@/services/api";
-import { useCurrentApp } from "@/components/context/app.context";
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { UtensilsCrossed } from 'lucide-react';
+import { Button, Card, Input, message } from 'antd';
+import { loginAPI } from '@/services/api';
+import { useCurrentApp } from '@/components/context/app.context';
+import {
+  ADMIN_ROLE_ID,
+  CHEF_ROLE_ID,
+  STAFF_ROLE_ID,
+} from '@/types/global.constanst';
 
 export const LoginPage = () => {
-  const { setIsAuthenticated, setUser } = useCurrentApp()
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { setIsAuthenticated, setUser } = useCurrentApp();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchParams] = useSearchParams();
 
-  // const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email || !password) {
-      message.warning("Vui lòng nhập đầy đủ thông tin");
+      message.warning('Vui lòng nhập đầy đủ thông tin');
       return;
     }
 
     setLoading(true);
+    try {
+      const res = await loginAPI(email, password);
 
-    const res = await loginAPI(email, password);
-    if (res?.data) {
+      if (!res?.data) {
+        throw new Error(res?.message || 'Sai thông tin đăng nhập');
+      }
+
+      const role = res.data.user.role;
+      const userInfo = {
+        userId: res.data.user._id,
+        name: res.data.user.name,
+        isGuest: false,
+      };
       setIsAuthenticated(true);
       setUser(res.data.user as any);
       localStorage.setItem('access_token', res.data.access_token);
+      localStorage.setItem('userInfo', JSON.stringify(userInfo));
+
       message.success(res.message);
-      const redirectUrl = searchParams.get("redirect") || "/";
-      navigate(decodeURIComponent(redirectUrl), { replace: true });
-    } else {
-      message.error(res.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+
+      const redirectUrl = searchParams.get('redirect');
+      if (redirectUrl) {
+        navigate(decodeURIComponent(redirectUrl), { replace: true });
+        return;
+      }
+
+      switch (role._id) {
+        case ADMIN_ROLE_ID:
+          navigate('/admin');
+          break;
+        case CHEF_ROLE_ID:
+          navigate('/chef');
+          break;
+        case STAFF_ROLE_ID:
+          navigate('/staff');
+          break;
+        default:
+          navigate('/');
+          break;
+      }
+    } catch (err: any) {
+      message.error('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
       setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleGoogleLogin = () => {
     // Thêm logic OAuth Google ở đây
-    message.info("Đăng nhập với Google chưa được triển khai");
+    message.info('Đăng nhập với Google chưa được triển khai');
   };
 
   const handleRegister = () => {
-    navigate("/register");
+    navigate('/register');
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-yellow-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 shadow-lg rounded-2xl">
-        
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -62,7 +97,7 @@ export const LoginPage = () => {
           </div>
           <h1
             className="text-3xl font-bold text-gray-900 mb-2"
-            style={{ fontFamily: "Poppins, sans-serif" }}
+            style={{ fontFamily: 'Poppins, sans-serif' }}
           >
             Restaurant Management
           </h1>
@@ -115,9 +150,7 @@ export const LoginPage = () => {
             className="w-full flex items-center justify-center gap-2"
             onClick={handleGoogleLogin}
           >
-            <div className="text-[#FF6B35]">
-            Đăng nhập với Google
-            </div>
+            <div className="text-[#FF6B35]">Đăng nhập với Google</div>
           </Button>
 
           <Button
