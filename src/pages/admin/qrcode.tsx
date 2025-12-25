@@ -12,7 +12,7 @@ const QRCell = ({ tableNumber, token }: QRCellProps) => {
 
   useEffect(() => {
     const url = `${
-      import.meta.env.VITE_BACKEND_URL
+      import.meta.env.VITE_FRONTEND_URL
     }/tables/${tableNumber}?token=${token}`;
 
     QRCode.toDataURL(url, {
