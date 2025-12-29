@@ -1,9 +1,7 @@
-import { socket } from '@/services/socket';
 import type { Order } from '@/types';
 import { formatTimeShort } from '@/utils/helpers';
 import { Modal, Tag, Divider } from 'antd';
 import { Package, Clock } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
 
 interface TableDetailModalProps {
   order: Order;

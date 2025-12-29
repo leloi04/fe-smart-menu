@@ -3,11 +3,7 @@ import { Users } from 'lucide-react';
 import { Select } from 'antd';
 
 import StaffLayout from '@/components/layout/chef/layouts/StaffLayout';
-import {
-  getAllTableAPI,
-  handleChangeStatusTableAPI,
-  updateTableAPI,
-} from '@/services/api';
+import { getAllTableAPI, handleChangeStatusTableAPI } from '@/services/api';
 
 const STATUS_OPTIONS = [
   { value: 'empty', label: 'Trống' },
