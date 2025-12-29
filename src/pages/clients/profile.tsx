@@ -30,6 +30,7 @@ import {
 import { Package } from 'lucide-react';
 import UpdateUserProfile from '@/components/layout/customers/update.infor';
 import UpdatePasswordModal from '@/components/layout/customers/change.password';
+import { formatIdOrder } from '@/utils/helpers';
 
 /* ================= TYPES ================= */
 type ReservationStatus = 'upcoming' | 'checked_in' | 'cancelled' | 'expired';
@@ -83,9 +84,11 @@ export default function ProfilePage() {
   };
 
   const handleCancelReservation = async (id: string, time: string) => {
+    const date = time.split(' - ')[0];
+    const timeSlot = time.split(' - ')[1];
     setReservations((prev) => prev.filter((r) => r.id !== id));
     message.success(`Hủy đặt bàn thành công thời gian ${time}!`);
-    await cancelTableReservationAPI(id);
+    await cancelTableReservationAPI(id, date, timeSlot);
   };
 
   const canCheckIn = (reservationTime: string) => {
@@ -189,7 +192,7 @@ export default function ProfilePage() {
 
     return {
       id: order._id,
-      orderCode: order._id.slice(-6).toUpperCase(),
+      orderCode: formatIdOrder(order._id),
       method: order.method,
       deliveryAddress: order.deliveryAddress,
       pickupTime: order.pickupTime,

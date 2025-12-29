@@ -37,10 +37,9 @@ const ManageScheduleTablePage = () => {
   };
 
   // === Xóa đặt bàn ===
-  const handleDelete = async (id: string, customerName: string) => {
-    if (!id) return;
-    await cancelTableReservationAPI(id);
-    message.success(`Đã hủy đặt bàn cho khách tên ${customerName}`);
+  const handleDelete = async (entity: any) => {
+    await cancelTableReservationAPI(entity.id, entity.date, entity.timeSlot);
+    message.success(`Đã hủy đặt bàn cho khách tên ${entity.customerName}`);
     refreshTable();
   };
 
@@ -169,7 +168,7 @@ const ManageScheduleTablePage = () => {
             description="Bạn chắc chắn muốn hủy lịch đặt bàn này?"
             okText="Hủy đặt bàn"
             cancelText="Hủy"
-            onConfirm={() => handleDelete(entity._id, entity.customerName)}
+            onConfirm={() => handleDelete(entity)}
           >
             <button className="px-3 py-2 bg-red-100 text-red-600 rounded-lg cursor-pointer">
               Hủy
@@ -182,11 +181,12 @@ const ManageScheduleTablePage = () => {
 
   return (
     <StaffLayout>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Quản lý đặt bàn</h2>
       <ProTable
         columns={columns}
         actionRef={actionRef}
         rowKey="_id"
-        headerTitle="Quản lý đặt bàn"
+        headerTitle="Dữ liệu đặt bàn"
         cardBordered
         request={async (params) => {
           let query = `current=${params.current}&pageSize=${params.pageSize}&populate=tableId&fields=tableId.tableNumber`;

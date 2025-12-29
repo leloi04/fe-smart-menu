@@ -22,7 +22,6 @@ export default function ChefPage() {
     });
 
     socket.on('newOrderItems', (data) => {
-      console.log('Received new order items:', data);
       setOrderItems((prevItems) => [...prevItems, ...data]);
     });
 

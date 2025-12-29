@@ -11,6 +11,11 @@ const fetchAccountAPI = () => {
   return axios.get<IBackendRes<IFetchAccount>>(urlBackend);
 };
 
+const refreshTokenAPI = () => {
+  const urlBackend = '/auth/refresh-token';
+  return axios.get<IBackendRes<ILogin>>(urlBackend);
+};
+
 const logoutAPI = () => {
   const urlBackend = '/auth/logout';
   return axios.post<IBackendRes<ILogin>>(urlBackend);
@@ -178,6 +183,11 @@ const deleteTableAPI = (_id: string) => {
   return axios.delete<IBackendRes<any>>(urlBackend);
 };
 
+const handleChangeStatusTableAPI = (tableId: string, status: string) => {
+  const urlBackend = `/tables/change-status`;
+  return axios.post<IBackendRes<any>>(urlBackend, { tableId, status });
+};
+
 // Menu API
 const getCategoryAPI = () => {
   const urlBackend = `/menus/category`;
@@ -212,6 +222,11 @@ const deleteMenuAPI = (_id: string) => {
 const updateMenuAPI = (_id: string, payload: any) => {
   const urlBackend = `/menus/${_id}`;
   return axios.patch<IBackendRes<any>>(urlBackend, payload);
+};
+
+const updateStatusMenuAPI = (id: string, status: string) => {
+  const urlBackend = `/menus/${id}/status`;
+  return axios.patch<IBackendRes<any>>(urlBackend, { status });
 };
 
 // Pre-Order
@@ -269,10 +284,16 @@ const checkInTableAPI = (reservationId: string) => {
   });
 };
 
-const cancelTableReservationAPI = (reservationId: string) => {
+const cancelTableReservationAPI = (
+  reservationId: string,
+  date: string,
+  timeSlot: string,
+) => {
   const urlBackend = `/reservations/cancel-reservation`;
   return axios.post<IBackendRes<IReservation[]>>(urlBackend, {
     reservationId,
+    date,
+    timeSlot,
   });
 };
 
@@ -307,7 +328,79 @@ const vnpayReturnAPI = () => {
   return axios.post(`/payments/vnpay-return${window.location.search}`);
 };
 
+const fetchOrderUnpaymentAPI = () => {
+  const urlBackend = `/payments/unpayment`;
+  return axios.post<IBackendRes<any>>(urlBackend);
+};
+
+const createPaymnetAPI = (
+  orderId: string,
+  amount: number,
+  type: string,
+  orderIn: string,
+) => {
+  const urlBackend = `/payments/${type}`;
+  return axios.post<IBackendRes<any>>(urlBackend, { orderId, amount, orderIn });
+};
+
+// Summary for Dashboard
+const summaryOrderAPI = (month: string, year: string) => {
+  const urlBackend = `/orders/summary`;
+  return axios.post<IBackendRes<any>>(urlBackend, { month, year });
+};
+
+const summaryOrderForTableAPI = (year: string) => {
+  const urlBackend = `/orders/summary-every-month`;
+  return axios.post<IBackendRes<any>>(urlBackend, { year });
+};
+
+const topItemsTableAPI = (month: string, year: string) => {
+  const urlBackend = `/orders/top-items`;
+  return axios.post<IBackendRes<any>>(urlBackend, { month, year });
+};
+
+const revenueTableAPI = (month: string, year: string) => {
+  const urlBackend = `/orders/revenue-month`;
+  return axios.post<IBackendRes<any>>(urlBackend, { month, year });
+};
+
+const summaryPreOrderAPI = (month: string, year: string) => {
+  const urlBackend = `/pre-order/summary`;
+  return axios.post<IBackendRes<any>>(urlBackend, { month, year });
+};
+
+const summaryPreOrderOfOnlineAPI = (year: string) => {
+  const urlBackend = `/pre-order/summary-every-month`;
+  return axios.post<IBackendRes<any>>(urlBackend, { year });
+};
+
+const topItemsOnlineAPI = (month: string, year: string) => {
+  const urlBackend = `/pre-order/top-items`;
+  return axios.post<IBackendRes<any>>(urlBackend, { month, year });
+};
+
+const summaryReservationAPI = (month: string, year: string) => {
+  const urlBackend = `/reservations/summary`;
+  return axios.post<IBackendRes<any>>(urlBackend, { month, year });
+};
+
+const summaryPaymentAPI = (month: string, year: string) => {
+  const urlBackend = `/payments/summary`;
+  return axios.post<IBackendRes<any>>(urlBackend, { month, year });
+};
+
+const summaryPaymentMonthlyAPI = (year: string) => {
+  const urlBackend = `/payments/summary-every-month`;
+  return axios.post<IBackendRes<any>>(urlBackend, { year });
+};
+
+const summaryReservationTodayAPI = (date: string) => {
+  const urlBackend = `/reservations/summary-today`;
+  return axios.post<IBackendRes<any>>(urlBackend, { date });
+};
+
 export {
+  refreshTokenAPI,
   getUserAPI,
   getMenuAPI,
   createOrderAPI,
@@ -354,4 +447,19 @@ export {
   updateUserAPI,
   updateUserPasswordAPI,
   getPreOrderAPI,
+  updateStatusMenuAPI,
+  fetchOrderUnpaymentAPI,
+  createPaymnetAPI,
+  handleChangeStatusTableAPI,
+  summaryOrderAPI,
+  summaryOrderForTableAPI,
+  topItemsTableAPI,
+  revenueTableAPI,
+  summaryPreOrderAPI,
+  summaryPreOrderOfOnlineAPI,
+  topItemsOnlineAPI,
+  summaryReservationAPI,
+  summaryPaymentAPI,
+  summaryPaymentMonthlyAPI,
+  summaryReservationTodayAPI,
 };

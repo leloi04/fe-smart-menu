@@ -68,7 +68,6 @@ export default function StaffPage() {
     });
 
     socket.on('newOrderPreOrder', (notification: any) => {
-      console.log('newOrderPreOrder: ', notification);
       const newOrder = {
         id: notification.id,
       };

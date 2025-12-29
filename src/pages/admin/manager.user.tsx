@@ -99,6 +99,7 @@ const ManageUserPage = () => {
 
     {
       title: 'Vai trò',
+      hideInSearch: true,
       dataIndex: ['role', 'name'],
       filters: true,
       valueEnum: {
@@ -115,6 +116,7 @@ const ManageUserPage = () => {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       valueType: 'dateTime',
+      hideInSearch: true,
       width: 180,
       render: (_, entity) => dayjs(entity.createdAt).format('DD/MM/YYYY HH:mm'),
     },
@@ -123,6 +125,7 @@ const ManageUserPage = () => {
       title: 'Ngày cập nhật',
       dataIndex: 'updatedAt',
       valueType: 'dateTime',
+      hideInSearch: true,
       width: 180,
       render: (_, entity) => dayjs(entity.updatedAt).format('DD/MM/YYYY HH:mm'),
     },

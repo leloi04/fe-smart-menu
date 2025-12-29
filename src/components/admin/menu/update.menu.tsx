@@ -1,4 +1,4 @@
-import { updateMenuAPI, updateFileAPI } from '@/services/api';
+import { updateMenuAPI, updateFileAPI, getCategoryAPI } from '@/services/api';
 import {
   Button,
   Col,
@@ -8,8 +8,10 @@ import {
   message,
   Modal,
   Row,
+  Space,
   Upload,
   type FormProps,
+  type InputRef,
   type UploadFile,
   type UploadProps,
 } from 'antd';
@@ -21,8 +23,9 @@ import {
   ProFormSelect,
   ProFormList,
 } from '@ant-design/pro-components';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { UploadRequestOption as RcCustomRequestOptions } from 'rc-upload/es/interface';
+import { PlusOutlined } from '@ant-design/icons';
 
 interface IProps {
   menuData: any;
@@ -51,6 +54,23 @@ const UpdateMenu = (props: IProps) => {
   const [fileListThumbnail, setFileListThumbnail] = useState<UploadFile[]>([]);
   const [thumbnailImage, setThumbnailImage] = useState('');
   const [form] = Form.useForm();
+  const [category, setCategory] = useState<any[]>([]);
+  const [name, setName] = useState('');
+  const inputRef = useRef<InputRef>(null);
+
+  useEffect(() => {
+    const fetchCategory = async () => {
+      const res = await getCategoryAPI();
+      if (res.data) {
+        const category = res.data.map((c: any) => ({
+          label: c,
+          value: c,
+        }));
+        setCategory(category);
+      }
+    };
+    fetchCategory();
+  }, []);
 
   useEffect(() => {
     if (!menuData || !openModal) return;
@@ -308,12 +328,41 @@ const UpdateMenu = (props: IProps) => {
               label="Category"
               placeholder="Chọn danh mục"
               rules={[{ required: true, message: 'Vui lòng chọn danh mục!' }]}
-              options={[
-                { label: 'Món chính', value: 'Món chính' },
-                { label: 'Món phụ', value: 'Món phụ' },
-                { label: 'Đồ uống', value: 'Đồ uống' },
-                { label: 'Tráng miệng', value: 'Tráng miệng' },
-              ]}
+              options={category}
+              fieldProps={{
+                dropdownRender: (menu) => (
+                  <>
+                    {menu}
+                    <Divider style={{ margin: '8px 0' }} />
+                    <Space style={{ padding: '0 8px 4px' }}>
+                      <Input
+                        placeholder="Nhập danh mục mới"
+                        ref={inputRef}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                      <Button
+                        type="text"
+                        icon={<PlusOutlined />}
+                        onClick={() => {
+                          if (!name.trim()) return;
+
+                          setCategory((prev) => [...prev, name]);
+                          setName('');
+
+                          // auto focus lại input
+                          setTimeout(() => {
+                            inputRef.current?.focus();
+                          }, 0);
+                        }}
+                      >
+                        Thêm
+                      </Button>
+                    </Space>
+                  </>
+                ),
+              }}
             />
           </Col>
           <Col span={8}>

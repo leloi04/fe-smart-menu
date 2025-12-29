@@ -3,7 +3,11 @@ import { Users } from 'lucide-react';
 import { Select } from 'antd';
 
 import StaffLayout from '@/components/layout/chef/layouts/StaffLayout';
-import { getAllTableAPI, updateTableAPI } from '@/services/api';
+import {
+  getAllTableAPI,
+  handleChangeStatusTableAPI,
+  updateTableAPI,
+} from '@/services/api';
 
 const STATUS_OPTIONS = [
   { value: 'empty', label: 'Trống' },
@@ -58,7 +62,7 @@ const TableStatusPage = () => {
     newStatus: string,
   ) => {
     console.log(`Bàn ${tableNumber} có ${id}: ${oldStatus} → ${newStatus}`);
-    await updateTableAPI(id, { status: newStatus });
+    await handleChangeStatusTableAPI(id, newStatus);
 
     setTables((prev) =>
       prev.map((table) =>

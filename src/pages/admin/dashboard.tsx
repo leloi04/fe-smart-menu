@@ -15,254 +15,333 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { ShoppingCart, DollarSign, Calendar } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  fetchMenuItemsAPI,
+  getAllTableAPI,
+  revenueTableAPI,
+  summaryOrderAPI,
+  summaryOrderForTableAPI,
+  summaryPaymentAPI,
+  summaryPaymentMonthlyAPI,
+  summaryPreOrderAPI,
+  summaryPreOrderOfOnlineAPI,
+  summaryReservationAPI,
+  summaryReservationTodayAPI,
+  topItemsOnlineAPI,
+  topItemsTableAPI,
+} from '@/services/api';
+import CountUp from 'react-countup';
 
 const { Title, Text } = Typography;
 
 const Dashboard = () => {
-  const monthlyOrderData = [
-    { month: 'T1', dineIn: 120, online: 85 },
-    { month: 'T2', dineIn: 135, online: 92 },
-    { month: 'T3', dineIn: 148, online: 105 },
-    { month: 'T4', dineIn: 162, online: 118 },
-    { month: 'T5', dineIn: 175, online: 130 },
-    { month: 'T6', dineIn: 188, online: 145 },
-    { month: 'T7', dineIn: 210, online: 165 },
-    { month: 'T8', dineIn: 195, online: 158 },
-    { month: 'T9', dineIn: 205, online: 172 },
-    { month: 'T10', dineIn: 220, online: 185 },
-    { month: 'T11', dineIn: 238, online: 198 },
-    { month: 'T12', dineIn: 255, online: 215 },
-  ];
+  const [totalOrderTableThisMonth, setTotalOrderTableThisMonth] =
+    useState<number>(0);
+  const [totalOrderOnlineThisMonth, setTotalOrderOnlineThisMonth] =
+    useState<number>(0);
+  const [revenueOrderTableThisMonth, setRevenueOrderTableThisMonth] =
+    useState<number>(0);
+  const [revenueOrderOnlineThisMonth, setRevenueOrderOnlineThisMonth] =
+    useState<number>(0);
+  const [totalReservationThisMonth, setTotalReservationThisMonth] =
+    useState<number>(0);
+  const [totalRevenueThisMonth, setTotalRevenueThisMonth] = useState<number>(0);
+  const [overviewStats, setOverviewStats] = useState<any[]>([]);
+  const [monthlyOrderData, setMonthlyOrderData] = useState<any[]>([]);
+  const [revenueByTypeData, setRevenueByTypeData] = useState<any[]>([]);
+  const [revenueMonthlyData, setRevenueMonthlyData] = useState<any[]>([]);
+  const [tablesRevenueData, setTablesRevenueData] = useState<any[]>([]);
+  const [topDishesData, setTopDishesData] = useState<any[]>([]);
+  const [bookingsToday, setBookingsToday] = useState<any[]>([]);
 
-  const revenueReservationData = [
-    { month: 'T1', revenue: 45000000, reservations: 35 },
-    { month: 'T2', revenue: 52000000, reservations: 42 },
-    { month: 'T3', revenue: 58000000, reservations: 48 },
-    { month: 'T4', revenue: 65000000, reservations: 55 },
-    { month: 'T5', revenue: 72000000, reservations: 62 },
-    { month: 'T6', revenue: 78000000, reservations: 68 },
-    { month: 'T7', revenue: 88000000, reservations: 75 },
-    { month: 'T8', revenue: 82000000, reservations: 70 },
-    { month: 'T9', revenue: 85000000, reservations: 72 },
-    { month: 'T10', revenue: 92000000, reservations: 78 },
-    { month: 'T11', revenue: 98000000, reservations: 85 },
-    { month: 'T12', revenue: 105000000, reservations: 92 },
-  ];
+  // Fetch data for OverViewStats
+  useEffect(() => {
+    const fetchDataRevenueForOverView = async () => {
+      const date = new Date();
+      const month = (date.getMonth() + 1).toString();
+      const year = date.getFullYear().toString();
+      const orderTable = await summaryOrderAPI(month, year);
+      if (orderTable.data) {
+        setTotalOrderTableThisMonth(orderTable.data.totalOrders);
+        setRevenueOrderTableThisMonth(orderTable.data.paidRevenue);
+      }
+      const orderOnline = await summaryPreOrderAPI(month, year);
+      if (orderOnline.data) {
+        setTotalOrderOnlineThisMonth(orderOnline.data.totalOrders);
+        setRevenueOrderOnlineThisMonth(orderOnline.data.paidRevenue);
+      }
+      const reservations = await summaryReservationAPI(month, year);
+      if (reservations.data) {
+        setTotalReservationThisMonth(reservations.data.totalReservations);
+      }
+      const revenues = await summaryPaymentAPI(month, year);
+      if (revenues.data) {
+        setTotalRevenueThisMonth(revenues.data.completedAmount);
+      }
+    };
+    fetchDataRevenueForOverView();
+  }, []);
 
-  const orderStatusData = [
-    { name: 'Chờ xác nhận', value: 45, color: '#FFA500' },
-    { name: 'Đang chế biến', value: 78, color: '#1890FF' },
-    { name: 'Đang giao', value: 32, color: '#52C41A' },
-    { name: 'Hoàn thành', value: 385, color: '#13C2C2' },
-    { name: 'Hủy', value: 28, color: '#FF4D4F' },
-  ];
-
-  const tablesData = [
-    { key: 1, tableNumber: 'Bàn 01', status: 'empty', billAmount: null },
-    { key: 2, tableNumber: 'Bàn 02', status: 'serving', billAmount: 850000 },
-    { key: 3, tableNumber: 'Bàn 03', status: 'reserved', billAmount: null },
-    { key: 4, tableNumber: 'Bàn 04', status: 'serving', billAmount: 1200000 },
-    { key: 5, tableNumber: 'Bàn 05', status: 'empty', billAmount: null },
-    { key: 6, tableNumber: 'Bàn 06', status: 'serving', billAmount: 650000 },
-    { key: 7, tableNumber: 'Bàn 07', status: 'reserved', billAmount: null },
-    { key: 8, tableNumber: 'Bàn 08', status: 'empty', billAmount: null },
-    { key: 9, tableNumber: 'Bàn 09', status: 'serving', billAmount: 980000 },
-    { key: 10, tableNumber: 'Bàn 10', status: 'empty', billAmount: null },
-    { key: 11, tableNumber: 'Bàn 11', status: 'serving', billAmount: 1450000 },
-    { key: 12, tableNumber: 'Bàn 12', status: 'reserved', billAmount: null },
-  ];
-
-  const topDishesData = [
-    { key: 1, name: 'Phở Bò Đặc Biệt', sold: 342, revenue: 54720000 },
-    { key: 2, name: 'Bún Chả Hà Nội', sold: 298, revenue: 35760000 },
-    { key: 3, name: 'Cơm Tấm Sườn Bì', sold: 275, revenue: 27500000 },
-    { key: 4, name: 'Bánh Mì Thịt Nướng', sold: 456, revenue: 18240000 },
-    { key: 5, name: 'Gỏi Cuốn Tôm Thịt', sold: 189, revenue: 11340000 },
-    { key: 6, name: 'Cà Phê Sữa Đá', sold: 523, revenue: 15690000 },
-    { key: 7, name: 'Trà Sữa Trân Châu', sold: 412, revenue: 20600000 },
-  ];
-
-  const bookingsToday = [
-    {
-      key: 1,
-      customerName: 'Nguyễn Văn An',
-      guests: 4,
-      time: '11:30',
-      status: 'arrived',
-    },
-    {
-      key: 2,
-      customerName: 'Trần Thị Bình',
-      guests: 6,
-      time: '12:00',
-      status: 'pending',
-    },
-    {
-      key: 3,
-      customerName: 'Lê Hoàng Cường',
-      guests: 2,
-      time: '12:30',
-      status: 'arrived',
-    },
-    {
-      key: 4,
-      customerName: 'Phạm Minh Đức',
-      guests: 8,
-      time: '18:00',
-      status: 'pending',
-    },
-    {
-      key: 5,
-      customerName: 'Vũ Thu Hà',
-      guests: 5,
-      time: '18:30',
-      status: 'pending',
-    },
-    {
-      key: 6,
-      customerName: 'Hoàng Văn Khoa',
-      guests: 3,
-      time: '19:00',
-      status: 'pending',
-    },
-    {
-      key: 7,
-      customerName: 'Đặng Thị Lan',
-      guests: 4,
-      time: '19:30',
-      status: 'pending',
-    },
-  ];
-
-  const overviewStats = [
-    {
-      title: 'Order Tại Bàn',
-      value: '2,241',
-      subtitle: 'Tháng này',
-      icon: <ShoppingCart size={24} />,
-      color: '#1890FF',
-      bgColor: '#E6F7FF',
-    },
-    {
-      title: 'Order Online',
-      value: '1,568',
-      subtitle: 'Tháng này',
-      icon: <ShoppingCart size={24} />,
-      color: '#52C41A',
-      bgColor: '#F6FFED',
-    },
-    {
-      title: 'Tổng Doanh Thu',
-      value: '105.2M',
-      subtitle: 'Tháng này',
-      icon: <DollarSign size={24} />,
-      color: '#FA8C16',
-      bgColor: '#FFF7E6',
-    },
-    {
-      title: 'Bàn Đặt Trước',
-      value: '92',
-      subtitle: 'Tháng này',
-      icon: <Calendar size={24} />,
-      color: '#722ED1',
-      bgColor: '#F9F0FF',
-    },
-  ];
-
-  const tableColumns = [
-    {
-      title: 'Số Bàn',
-      dataIndex: 'tableNumber',
-      key: 'tableNumber',
-    },
-    {
-      title: 'Trạng Thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => {
-        const statusMap = {
-          empty: { text: 'Trống', color: 'default' },
-          serving: { text: 'Đang phục vụ', color: 'processing' },
-          reserved: { text: 'Đã đặt trước', color: 'warning' },
-        };
-        const statusInfo = statusMap[status as keyof typeof statusMap];
-        return <Tag color={statusInfo.color}>{statusInfo.text}</Tag>;
+  // Set overViewStats
+  useEffect(() => {
+    const overviewStats = [
+      {
+        title: 'Order Tại Bàn',
+        value: totalOrderTableThisMonth || 0,
+        subtitle: 'Tháng này',
+        icon: <ShoppingCart size={24} />,
+        color: '#1890FF',
+        bgColor: '#E6F7FF',
       },
-    },
+      {
+        title: 'Order Online',
+        value: totalOrderOnlineThisMonth || 0,
+        subtitle: 'Tháng này',
+        icon: <ShoppingCart size={24} />,
+        color: '#52C41A',
+        bgColor: '#F6FFED',
+      },
+      {
+        title: 'Tổng Doanh Thu',
+        value: totalRevenueThisMonth ?? 0,
+        subtitle: 'Tháng này',
+        icon: <DollarSign size={24} />,
+        color: '#FA8C16',
+        bgColor: '#FFF7E6',
+        isCurrency: true,
+      },
+      {
+        title: 'Bàn Đặt Trước',
+        value: totalReservationThisMonth || 0,
+        subtitle: 'Tháng này',
+        icon: <Calendar size={24} />,
+        color: '#722ED1',
+        bgColor: '#F9F0FF',
+      },
+    ];
+    setOverviewStats(overviewStats);
+  }, [
+    totalOrderOnlineThisMonth,
+    totalOrderTableThisMonth,
+    totalReservationThisMonth,
+    totalRevenueThisMonth,
+  ]);
+
+  // Fetch data monthly order of Table and Online
+  useEffect(() => {
+    const fetchDataMonthly = async () => {
+      const date = new Date();
+      const year = date.getFullYear().toString();
+      const dataOrderTable = await summaryOrderForTableAPI(year);
+      const dataOrderOnline = await summaryPreOrderOfOnlineAPI(year);
+      if (dataOrderTable.data && dataOrderOnline.data) {
+        const monthlyOrderOfTable = dataOrderTable.data.map((d: any) => ({
+          month: `T${d.month}`,
+          dineIn: d.totalOrders,
+        }));
+        const monthlyOrderOfOnline = dataOrderOnline.data.map((d: any) => ({
+          month: `T${d.month}`,
+          online: d.totalOrders,
+        }));
+        const monthlyOrderData = monthlyOrderOfTable.map((d: any) => {
+          const onlineItem = monthlyOrderOfOnline.find(
+            (o: any) => o.month === d.month,
+          );
+
+          return {
+            month: d.month,
+            dineIn: d.dineIn,
+            online: onlineItem.online,
+          };
+        });
+
+        setMonthlyOrderData(monthlyOrderData);
+      }
+    };
+    fetchDataMonthly();
+  }, []);
+
+  // Fetch data for pipe diagram
+  useEffect(() => {
+    const revenueByTypeData = [
+      { name: 'Tại Bàn', value: +revenueOrderTableThisMonth || 0 },
+      { name: 'Online', value: +revenueOrderOnlineThisMonth || 0 },
+    ];
+    setRevenueByTypeData(revenueByTypeData);
+  }, [revenueOrderOnlineThisMonth, revenueOrderTableThisMonth]);
+
+  // Fetch data revenue of monthly
+  useEffect(() => {
+    const fetchRevenueMonthly = async () => {
+      const date = new Date();
+      const year = date.getFullYear().toString();
+      const data = await summaryPaymentMonthlyAPI(year);
+      if (data.data) {
+        const revenueMonthlyData = data.data.map((d: any) => ({
+          month: `T${d.month}`,
+          revenue: d.totalRevenue,
+        }));
+        setRevenueMonthlyData(revenueMonthlyData);
+      }
+    };
+    fetchRevenueMonthly();
+  }, []);
+
+  // Fetch revenue of table monthly
+  useEffect(() => {
+    const fetchRevenueTableMonthly = async () => {
+      const date = new Date();
+      const month = (date.getMonth() + 1).toString();
+      const year = date.getFullYear().toString();
+      const dataTable = await getAllTableAPI();
+      const revenueTable = await revenueTableAPI(month, year);
+      if (dataTable.data && revenueTable.data) {
+        const tables = dataTable.data.map((t: any) => ({
+          id: t._id,
+          tableNumber: `Bàn ${t.tableNumber}`,
+        }));
+        const tablesRevenueData = tables.map((t: any) => {
+          const revenue = revenueTable.data.find((r: any) => r.tableId == t.id);
+          return {
+            key: t.id,
+            tableNumber: t.tableNumber,
+            revenue: revenue?.revenue || 0,
+          };
+        });
+        setTablesRevenueData(tablesRevenueData);
+      }
+    };
+    fetchRevenueTableMonthly();
+  }, []);
+
+  // Fetch top items sold in this month
+  useEffect(() => {
+    const fetchTopItems = async () => {
+      const date = new Date();
+      const month = (date.getMonth() + 1).toString();
+      const year = date.getFullYear().toString();
+      const menu = await fetchMenuItemsAPI();
+      const itemSoldOrderTable = await topItemsTableAPI(month, year);
+      const itemSoldOrderOnline = await topItemsOnlineAPI(month, year);
+      if (menu.data && itemSoldOrderOnline.data && itemSoldOrderTable.data) {
+        const dataMenu = menu.data;
+        const menuItems = (dataMenu as any).map((i: any) => ({
+          id: i._id,
+          name: i.name,
+        }));
+        const topDishesData = menuItems.map((i: any) => {
+          const itemOrderTable = itemSoldOrderTable.data.find(
+            (itemT: any) => itemT.menuItemId == i.id,
+          );
+          const itemOrderOnline = itemSoldOrderOnline.data.find(
+            (itemO: any) => itemO.menuItemId == i.id,
+          );
+
+          return {
+            key: i.id,
+            name: i.name,
+            sold:
+              (itemOrderTable?.quantity || 0) +
+              (itemOrderOnline?.quantity || 0),
+          };
+        });
+        setTopDishesData(
+          topDishesData.sort((a: any, b: any) => b.sold - a.sold),
+        );
+      }
+    };
+    fetchTopItems();
+  }, []);
+
+  // Fetch reservation in today
+  useEffect(() => {
+    const fetchReservationToday = async () => {
+      const date = new Date();
+      const dateConverse = date.toISOString().split('T')[0];
+      const reservationsToday = await summaryReservationTodayAPI(dateConverse);
+      if (reservationsToday.data) {
+        const bookingsToday = reservationsToday.data.map((r: any) => ({
+          key: r.tableData._id,
+          customerName: r.customerName,
+          customerPhone: r.customerPhone,
+          tableNumber: r.tableData.tableNumber,
+          guests: r.capacity,
+          time: r.timeSlot,
+          status: r.status,
+        }));
+        setBookingsToday(bookingsToday);
+      }
+    };
+    fetchReservationToday();
+  }, []);
+
+  /* ================= COLUMNS ================= */
+
+  const tableRevenueColumns = [
+    { title: 'Số Bàn', dataIndex: 'tableNumber' },
     {
-      title: 'Hóa Đơn',
-      dataIndex: 'billAmount',
-      key: 'billAmount',
-      render: (amount: number | null) =>
-        amount ? `${amount.toLocaleString('vi-VN')} đ` : '-',
+      title: 'Doanh Thu Tháng',
+      dataIndex: 'revenue',
+      align: 'right' as const,
+      render: (v: number) => `${v.toLocaleString('vi-VN')} đ`,
     },
   ];
 
   const topDishesColumns = [
-    {
-      title: 'Tên Món',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Đã Bán',
-      dataIndex: 'sold',
-      key: 'sold',
-      align: 'center' as const,
-    },
-    {
-      title: 'Doanh Thu',
-      dataIndex: 'revenue',
-      key: 'revenue',
-      align: 'right' as const,
-      render: (revenue: number) => `${revenue.toLocaleString('vi-VN')} đ`,
-    },
+    { title: 'Tên Món', dataIndex: 'name' },
+    { title: 'Đã Bán', dataIndex: 'sold', align: 'center' as const },
   ];
 
   const bookingsColumns = [
-    {
-      title: 'Tên Khách',
-      dataIndex: 'customerName',
-      key: 'customerName',
-    },
-    {
-      title: 'Số Người',
-      dataIndex: 'guests',
-      key: 'guests',
-      align: 'center' as const,
-    },
-    {
-      title: 'Giờ Đặt',
-      dataIndex: 'time',
-      key: 'time',
-      align: 'center' as const,
-    },
+    { title: 'Tên Khách', dataIndex: 'customerName' },
+    { title: 'SĐT', dataIndex: 'customerPhone' },
+    { title: 'Số bàn', dataIndex: 'tableNumber' },
+    { title: 'Số Người', dataIndex: 'guests', align: 'center' as const },
+    { title: 'Giờ', dataIndex: 'time', align: 'center' as const },
     {
       title: 'Trạng Thái',
       dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'arrived' ? 'success' : 'default'}>
-          {status === 'arrived' ? 'Đã đến' : 'Chưa đến'}
-        </Tag>
-      ),
+      render: (s: string) => {
+        const statusMap: Record<string, { color: string; label: string }> = {
+          upcoming: {
+            color: 'blue',
+            label: 'Sắp tới',
+          },
+          checked_in: {
+            color: 'green',
+            label: 'Đã check-in',
+          },
+          expired: {
+            color: 'orange',
+            label: 'Đã hết hạn',
+          },
+          cancelled: {
+            color: 'red',
+            label: 'Đã hủy',
+          },
+        };
+
+        const status = statusMap[s] || {
+          color: 'default',
+          label: s,
+        };
+
+        return <Tag color={status.color}>{status.label}</Tag>;
+      },
     },
   ];
 
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(0)}M`;
-    }
-    return `${(value / 1000).toFixed(0)}K`;
-  };
+  const COLORS = ['#1890FF', '#52C41A'];
+
+  /* ================= RENDER ================= */
 
   return (
-    <div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
-      <Title level={2} style={{ marginBottom: '24px' }}>
-        Dashboard Nhà Hàng
-      </Title>
+    <div style={{ padding: 24, background: '#f0f2f5', minHeight: '100vh' }}>
+      <Title level={2}>Dashboard Nhà Hàng</Title>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+      {/* OVERVIEW */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         {overviewStats.map((stat, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
             <Card hoverable>
@@ -294,7 +373,15 @@ const Dashboard = () => {
                       marginTop: '4px',
                     }}
                   >
-                    {stat.value}
+                    <CountUp
+                      end={stat.value}
+                      duration={1.2}
+                      formattingFn={(v) =>
+                        stat.isCurrency
+                          ? v.toLocaleString('vi-VN')
+                          : v.toString()
+                      }
+                    />
                   </div>
                   <Text type="secondary" style={{ fontSize: '12px' }}>
                     {stat.subtitle}
@@ -306,140 +393,77 @@ const Dashboard = () => {
         ))}
       </Row>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+      {/* LINE + PIE */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} lg={16}>
           <Card title="Order Tại Bàn & Online Theo Tháng">
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer height={300}>
               <LineChart data={monthlyOrderData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="dineIn"
-                  stroke="#1890FF"
-                  strokeWidth={2}
-                  name="Tại Bàn"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="online"
-                  stroke="#52C41A"
-                  strokeWidth={2}
-                  name="Online"
-                />
+                <Line dataKey="dineIn" stroke="#1890FF" name="Tại bàn" />
+                <Line dataKey="online" stroke="#52C41A" name="Online" />
               </LineChart>
             </ResponsiveContainer>
           </Card>
         </Col>
 
         <Col xs={24} lg={8}>
-          <Card title="Phân Loại Trạng Thái Đơn Hàng">
-            <ResponsiveContainer width="100%" height={300}>
+          <Card title="Tỷ Trọng Doanh Thu">
+            <ResponsiveContainer height={300}>
               <PieChart>
                 <Pie
-                  data={orderStatusData}
+                  data={revenueByTypeData}
+                  dataKey="value"
+                  nameKey="name"
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
                   outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={(entry) => `${entry.name}: ${entry.value}`}
+                  label={(e) => `${e.name}: ${(e.value / 1000000).toFixed(1)}M`}
                 >
-                  {orderStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {revenueByTypeData.map((_: any, i: any) => (
+                    <Cell key={i} fill={COLORS[i]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip
+                  formatter={(value) =>
+                    typeof value === 'number'
+                      ? `${value.toLocaleString('vi-VN')} đ`
+                      : value
+                  }
+                />
+
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           </Card>
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24}>
-          <Card title="Doanh Thu & Bàn Đặt Trước Theo Tháng">
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={revenueReservationData}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#FA8C16" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#FA8C16" stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient
-                    id="colorReservations"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="5%" stopColor="#722ED1" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#722ED1" stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis
-                  yAxisId="left"
-                  tickFormatter={formatCurrency}
-                  label={{
-                    value: 'Doanh Thu (VNĐ)',
-                    angle: -90,
-                    position: 'insideLeft',
-                  }}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  label={{
-                    value: 'Số Bàn',
-                    angle: 90,
-                    position: 'insideRight',
-                  }}
-                />
-                <Tooltip
-                  formatter={(value, name) =>
-                    name === 'Doanh Thu'
-                      ? [`${(value || 0).toLocaleString('vi-VN')} đ`, name]
-                      : [value, name]
-                  }
-                />
+      {/* REVENUE MONTHLY */}
+      <Card title="Doanh Thu Theo Tháng" style={{ marginBottom: 24 }}>
+        <ResponsiveContainer height={300}>
+          <AreaChart data={revenueMonthlyData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip />
+            <Area dataKey="revenue" stroke="#FA8C16" fill="#FFE7BA" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </Card>
 
-                <Legend />
-                <Area
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#FA8C16"
-                  fillOpacity={1}
-                  fill="url(#colorRevenue)"
-                  name="Doanh Thu"
-                />
-                <Area
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="reservations"
-                  stroke="#722ED1"
-                  fillOpacity={1}
-                  fill="url(#colorReservations)"
-                  name="Bàn Đặt Trước"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Card>
-        </Col>
-      </Row>
-
+      {/* TABLES */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <Card title="Quản Lý Bàn">
             <Table
-              dataSource={tablesData}
-              columns={tableColumns}
+              dataSource={tablesRevenueData}
+              columns={tableRevenueColumns}
               pagination={{ pageSize: 6 }}
               scroll={{ x: 400 }}
             />
@@ -458,18 +482,14 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
-        <Col xs={24}>
-          <Card title="Đặt Bàn Hôm Nay">
-            <Table
-              dataSource={bookingsToday}
-              columns={bookingsColumns}
-              pagination={{ pageSize: 7 }}
-              scroll={{ x: 600 }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* BOOKINGS */}
+      <Card title="Đặt Bàn Hôm Nay" style={{ marginTop: 24 }}>
+        <Table
+          dataSource={bookingsToday}
+          columns={bookingsColumns}
+          pagination={false}
+        />
+      </Card>
     </div>
   );
 };

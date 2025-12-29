@@ -2,7 +2,7 @@ import { formatTimeShort } from '@/utils/helpers';
 import { Modal, Tag, Divider } from 'antd';
 import { Package, Clock } from 'lucide-react';
 
-interface TableDetailModalProps {
+interface OnlineDetailModalProps {
   customerName?: string;
   open: boolean;
   onClose: () => void;
@@ -10,7 +10,7 @@ interface TableDetailModalProps {
   order: any;
 }
 
-export default function OnlineDetailModal(props: TableDetailModalProps) {
+export default function OnlineDetailModal(props: OnlineDetailModalProps) {
   const { customerName, open, onClose, timestamp, order } = props;
 
   const renderSection = (title: string, items: any[], emptyText: string) => (
@@ -20,7 +20,9 @@ export default function OnlineDetailModal(props: TableDetailModalProps) {
         {title}
       </h3>
       {items.length === 0 ? (
-        <p className="text-sm text-gray-400 ml-6">{emptyText}</p>
+        <p className="text-sm font-medium text-gray-600 mb-2 ml-2">
+          {emptyText}
+        </p>
       ) : (
         <div className="space-y-2 ml-6">
           {items.map((item) => (
@@ -103,7 +105,7 @@ export default function OnlineDetailModal(props: TableDetailModalProps) {
         {renderSection(
           'Món đang chế biến',
           order.orderItems ?? [],
-          'Chưa có món nào đang chế biến.',
+          'Các món đã được chế biến xong!',
         )}
 
         {renderSection(

@@ -84,7 +84,6 @@ export default function CartPage() {
       const fee = Math.round(BASE_FEE + km * PRICE_PER_KM);
       setShipFee(fee);
     } catch (err) {
-      console.error(err);
       message.error('Không thể tính phí ship');
       setShipFee(0);
       setDistanceKm(null);
@@ -283,6 +282,18 @@ export default function CartPage() {
       }
     }
 
+    if (isCalculatingShip) {
+      message.warning('Chưa tính xong phí vận chuyển xin chờ đôi lát!');
+      return;
+    }
+
+    if (distanceKm === null) {
+      message.warning(
+        'Địa chỉ của bạn nhập vào không hợp lệ vui lòng nhập địa chỉ khác!',
+      );
+      return;
+    }
+
     const payload = {
       paymentStatus: 'unpaid',
       customerId: user?._id,
@@ -341,8 +352,6 @@ export default function CartPage() {
     }
   };
 
-  console.log('cart: ', cart);
-
   // ===================== UI RENDER =====================
   return (
     <div>
@@ -391,7 +400,13 @@ export default function CartPage() {
 
                             <p className="text-[#FF6B35] font-bold mt-1">
                               {(
-                                (item.variant?.price ?? item.price) *
+                                ((item.variant?.price ?? item.price) +
+                                  (item.toppings.reduce(
+                                    (acc: any, cur: any) => {
+                                      return acc + cur.price;
+                                    },
+                                    0,
+                                  ) || 0)) *
                                 item.quantity
                               ).toLocaleString('vi-VN')}
                               đ

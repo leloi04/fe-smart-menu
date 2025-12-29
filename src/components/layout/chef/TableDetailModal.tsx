@@ -148,141 +148,165 @@ export default function TableDetailModal(props: TableDetailModalProps) {
         <Divider />
 
         {/* Phần Món đang chế biến với 2 mục con */}
-        <div className="mb-6">
-          <h3 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <Package size={18} className="text-orange-500" />
-            Món đang chế biến
-          </h3>
+        {firstOrderItems.length > 0 || addedOrderBatches.length > 0 ? (
+          <div className="mb-6">
+            <h3 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <Package size={18} className="text-orange-500" />
+              Món đang chế biến
+            </h3>
 
-          <div className="ml-6 space-y-4">
-            {/* Mục con 1: Món gọi ban đầu */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-600 mb-2">
-                Món gọi ban đầu
-              </h4>
-              {firstOrderItems.length === 0 ? (
-                <p className="text-xs text-gray-400 ml-4">Chưa có món nào</p>
-              ) : (
-                <div className="space-y-2 ml-4">
-                  {firstOrderItems.map((item, index) => (
-                    <div
-                      key={item.menuItemId || index}
-                      className="flex items-start justify-between bg-gray-50 p-3 rounded"
-                    >
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-800">
-                          {item.name}
-                          {item.variant && (
-                            <span className="text-sm text-gray-500">
-                              {' '}
-                              ({item.variant.size})
+            <div className="ml-6 space-y-4">
+              {/* Mục con 1: Món gọi ban đầu */}
+              <div>
+                <h4 className="text-sm font-medium text-gray-600 mb-2">
+                  Món gọi ban đầu
+                </h4>
+                {firstOrderItems.length > 0 ? (
+                  <div className="space-y-2 ml-4">
+                    {firstOrderItems.map((item, index) => (
+                      <div
+                        key={item.menuItemId || index}
+                        className="flex items-start justify-between bg-gray-50 p-3 rounded"
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800">
+                            {item.name}
+                            {item.variant && (
+                              <span className="text-sm text-gray-500">
+                                {' '}
+                                ({item.variant.size})
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            Số lượng:{' '}
+                            <span className="font-semibold">
+                              {item.quantity}
                             </span>
+                          </div>
+                          {item.toppings && item.toppings.length > 0 && (
+                            <div className="text-sm text-gray-500">
+                              Topping:{' '}
+                              {item.toppings.map((t: any) => t.name).join(', ')}
+                            </div>
+                          )}
+                          {item.notes && (
+                            <div className="text-sm text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1">
+                              Ghi chú: {item.notes}
+                            </div>
                           )}
                         </div>
-                        <div className="text-sm text-gray-600">
-                          Số lượng:{' '}
-                          <span className="font-semibold">{item.quantity}</span>
-                        </div>
-                        {item.toppings && item.toppings.length > 0 && (
-                          <div className="text-sm text-gray-500">
-                            Topping:{' '}
-                            {item.toppings.map((t: any) => t.name).join(', ')}
-                          </div>
-                        )}
-                        {item.notes && (
-                          <div className="text-sm text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1">
-                            Ghi chú: {item.notes}
-                          </div>
-                        )}
-                      </div>
-                      <div className="ml-4 text-right">
-                        {item.startTime && (
-                          <div className="flex items-center gap-1 text-sm text-blue-600">
-                            <Clock size={14} />
-                            <span>{formatTimeShort(item.startTime)}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Mục con 2: Món gọi thêm sau */}
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-600 mb-2">
-                Món gọi thêm sau
-              </h4>
-
-              {addedOrderBatches.length > 0 ? (
-                addedOrderBatches.map((batch: any, batchIndex: number) => (
-                  <div key={batch.batchId} className="mb-4">
-                    <p className="text-sm font-medium text-gray-600 mb-2 ml-2">
-                      Lần gọi {batchIndex + 1}
-                    </p>
-
-                    {batch.orderItems.length > 0 ? (
-                      batch.orderItems.map((oi: any) => (
-                        <div
-                          key={oi.menuItemId}
-                          className="flex items-start justify-between bg-gray-50 p-3 rounded"
-                        >
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-800">
-                              {oi.name}
-                              {oi.variant && (
-                                <span className="text-sm text-gray-500">
-                                  {' '}
-                                  ({oi.variant.size})
-                                </span>
-                              )}
+                        <div className="ml-4 text-right">
+                          {item.startTime && (
+                            <div className="flex items-center gap-1 text-sm text-blue-600">
+                              <Clock size={14} />
+                              <span>{formatTimeShort(item.startTime)}</span>
                             </div>
-                            <div className="text-sm text-gray-600">
-                              Số lượng:{' '}
-                              <span className="font-semibold">
-                                {oi.quantity}
-                              </span>
-                            </div>
-                            {oi.toppings && oi.toppings.length > 0 && (
-                              <div className="text-sm text-gray-500">
-                                Topping:{' '}
-                                {oi.toppings.map((t: any) => t.name).join(', ')}
-                              </div>
-                            )}
-                            {oi.notes && (
-                              <div className="text-sm text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1">
-                                Ghi chú: {oi.notes}
-                              </div>
-                            )}
-                          </div>
-                          <div className="ml-4 text-right">
-                            {batch.timestamp && (
-                              <div className="flex ois-center gap-1 text-sm text-blue-600">
-                                <Clock size={14} />
-                                <span>
-                                  {formatTime(new Date(batch.timestamp))}
-                                </span>
-                              </div>
-                            )}
-                          </div>
+                          )}
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-xs text-gray-400 ml-4">
-                        Chưa có món nào
-                      </p>
-                    )}
+                      </div>
+                    ))}
                   </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-sm ml-2">
-                  Chưa có món nào được gọi thêm.
-                </p>
-              )}
+                ) : (
+                  <p className="text-sm font-medium text-gray-600 mb-2 ml-2">
+                    Các món đã được chế biến xong!
+                  </p>
+                )}
+              </div>
+
+              {/* Mục con 2: Món gọi thêm sau */}
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-600 mb-2">
+                  Món gọi thêm sau
+                </h4>
+                {addedOrderBatches.length > 0 &&
+                  (addedOrderBatches.filter((a) => a.orderItems.length > 0)
+                    .length > 0 ? (
+                    addedOrderBatches.map((batch: any) => {
+                      if (batch.orderItems.length > 0) {
+                        return (
+                          <div key={batch.batchId} className="mb-4">
+                            <p className="text-sm font-medium text-gray-600 mb-2 ml-2">
+                              Lần gọi mới
+                            </p>
+
+                            {batch.orderItems.length > 0 &&
+                              batch.orderItems.map((oi: any) => (
+                                <div
+                                  key={oi.menuItemId}
+                                  className="flex items-start justify-between bg-gray-50 p-3 rounded"
+                                >
+                                  <div className="flex-1">
+                                    <div className="font-medium text-gray-800">
+                                      {oi.name}
+                                      {oi.variant && (
+                                        <span className="text-sm text-gray-500">
+                                          {' '}
+                                          ({oi.variant.size})
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      Số lượng:{' '}
+                                      <span className="font-semibold">
+                                        {oi.quantity}
+                                      </span>
+                                    </div>
+                                    {oi.toppings && oi.toppings.length > 0 && (
+                                      <div className="text-sm text-gray-500">
+                                        Topping:{' '}
+                                        {oi.toppings
+                                          .map((t: any) => t.name)
+                                          .join(', ')}
+                                      </div>
+                                    )}
+                                    {oi.notes && (
+                                      <div className="text-sm text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1">
+                                        Ghi chú: {oi.notes}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="ml-4 text-right">
+                                    {batch.timestamp && (
+                                      <div className="flex ois-center gap-1 text-sm text-blue-600">
+                                        <Clock size={14} />
+                                        <span>
+                                          {formatTime(
+                                            new Date(batch.timestamp),
+                                          )}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        );
+                      }
+                    })
+                  ) : (
+                    <p className="text-sm font-medium text-gray-600 mb-2 ml-2">
+                      Các món đã được chế biến xong!
+                    </p>
+                  ))}
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="mb-6">
+            <h3 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <Package size={18} className="text-orange-500" />
+              Món đang chế biến
+            </h3>
+            <div className="ml-6 space-y-4">
+              <div className="space-y-2 ml-4">
+                <h4 className="text-sm font-medium text-gray-600 mb-2">
+                  Không còn món nào cần phải chế biến
+                </h4>
+              </div>
+            </div>
+          </div>
+        )}
 
         {renderSection(
           'Món đã xong',

@@ -87,7 +87,7 @@ export default function PreOderModal(props: IProps) {
       quantity,
       variant: selectedSize,
       toppings,
-      price: totalPrice,
+      price: dataItem.price,
     };
     addItem(data);
     setDataItem(null);

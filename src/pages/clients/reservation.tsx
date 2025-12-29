@@ -122,6 +122,13 @@ export default function BookingPage() {
     setSelectedTableId(null);
     setNotes('');
 
+    const tableNumber = tablesFilter.find(
+      (t) => t.id === selectedTableId,
+    )?.tableNumber;
+    message.success(
+      `Bạn đã đặt bàn ${tableNumber} ở khung giờ ${selectedTime} ngày ${selectedDate}`,
+    );
+
     socket.emit('createReservation', data);
   }
 

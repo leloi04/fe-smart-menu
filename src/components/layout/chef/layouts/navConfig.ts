@@ -9,6 +9,8 @@ import {
   Table2Icon,
   Truck,
   ClipboardClock,
+  SquareMenu,
+  Landmark,
 } from 'lucide-react';
 
 export const adminNav = [
@@ -46,10 +48,22 @@ export const staffNav = [
     label: 'Quản lý vận chuyển đơn',
   },
   {
+    id: 'menu',
+    to: '/staff/menus',
+    icon: SquareMenu,
+    label: 'Quản lý trạng thái món',
+  },
+  {
     id: 'schedule',
     to: '/staff/schedules',
     icon: ClipboardClock,
     label: 'Quản lý lịch đặt bàn',
+  },
+  {
+    id: 'payment',
+    to: '/staff/payments',
+    icon: Landmark,
+    label: 'Quản lý thanh toán order',
   },
   { id: 'bills', to: '/staff/bills', icon: Receipt, label: 'Quản lý hóa đơn' },
 ];

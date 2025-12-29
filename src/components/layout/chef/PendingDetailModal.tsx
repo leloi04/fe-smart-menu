@@ -1,37 +1,19 @@
 import { socket } from '@/services/socket';
+import type { Order } from '@/types';
 import { formatTimeShort } from '@/utils/helpers';
 import { Modal, Tag, Divider } from 'antd';
 import { Package, Clock } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface TableDetailModalProps {
-  tableNumber?: string;
+  order: Order;
   open: boolean;
   onClose: () => void;
   timestamp: string;
 }
 
 export default function PendingDetailModal(props: TableDetailModalProps) {
-  const { tableNumber, open, onClose, timestamp } = props;
-  const hasFetchedData = useRef(false);
-  const [firstOrderItems, setFirstOrderItems] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (!tableNumber) return;
-
-    if (!hasFetchedData.current) {
-      socket.emit('getDetailTable', tableNumber);
-      hasFetchedData.current = true;
-    }
-
-    socket.on('detailTableData', (data) => {
-      setFirstOrderItems(data.firstOrder.orderItems || []);
-    });
-
-    return () => {
-      socket.off('detailTableData');
-    };
-  }, [tableNumber]);
+  const { order, open, onClose, timestamp } = props;
 
   return (
     <Modal
@@ -44,7 +26,9 @@ export default function PendingDetailModal(props: TableDetailModalProps) {
           <Package size={20} className="text-orange-500" />
           <span className="text-lg font-semibold">
             Chi tiết Order -{' '}
-            {tableNumber !== undefined ? `Bàn ${tableNumber}` : 'Online'}
+            {order.tableNumber !== undefined
+              ? `Bàn ${order.tableNumber}`
+              : `Khách ${order.customerName}`}
           </span>
         </div>
       }
@@ -72,13 +56,13 @@ export default function PendingDetailModal(props: TableDetailModalProps) {
 
           <div className="ml-6 space-y-4">
             <div>
-              {firstOrderItems.length === 0 ? (
+              {order.orderItems.length === 0 ? (
                 <p className="text-xs text-gray-400 ml-4">Chưa có món nào</p>
               ) : (
                 <div className="space-y-2 ml-4">
-                  {firstOrderItems.map((item, index) => (
+                  {order.orderItems.map((item: any, index) => (
                     <div
-                      key={item.menuItemId || index}
+                      key={item.id || index}
                       className="flex items-start justify-between bg-gray-50 p-3 rounded"
                     >
                       <div className="flex-1">
@@ -93,7 +77,7 @@ export default function PendingDetailModal(props: TableDetailModalProps) {
                         </div>
                         <div className="text-sm text-gray-600">
                           Số lượng:{' '}
-                          <span className="font-semibold">{item.quantity}</span>
+                          <span className="font-semibold">{item.qty}</span>
                         </div>
                         {item.toppings && item.toppings.length > 0 && (
                           <div className="text-sm text-gray-500">

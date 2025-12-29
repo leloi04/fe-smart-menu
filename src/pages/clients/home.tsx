@@ -49,6 +49,8 @@ export default function HomePage() {
   );
   const [menuItems, setMenuItems] = useState<IMenuModal[]>([]);
   const [filteredDishes, setFilteredDishes] = useState<IMenuModal[]>([]);
+  const ITEMS_PER_PAGE = 8;
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const navigate = useNavigate();
 
   // --- Slider: autoplay + smooth transition ---
@@ -134,8 +136,6 @@ export default function HomePage() {
 
   return (
     <div className="w-full flex flex-col gap-12">
-      {/* Slider: chiều cao lớn hơn, chuyển động mượt */}
-      {/* SLIDER */}
       <div className="relative w-full h-[600px] overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
@@ -160,11 +160,11 @@ export default function HomePage() {
                   {slides[currentSlide].subtitle}
                 </p>
                 <div className="mt-6 flex gap-4">
-                  <button className="bg-[#FF6B35] text-white px-6 py-3 rounded-xl hover:bg-orange-600 transition cursor-pointer">
-                    Xem chi tiết
-                  </button>
-                  <button className="bg-white/80 text-black px-6 py-3 rounded-xl hover:bg-white transition cursor-pointer">
-                    Đặt ngay
+                  <button
+                    onClick={() => navigate('/pre-order')}
+                    className="bg-[#FF6B35] text-white px-6 py-3 rounded-xl hover:bg-orange-600 transition cursor-pointer"
+                  >
+                    Đến đặt món ngay
                   </button>
                 </div>
               </div>
@@ -234,7 +234,7 @@ export default function HomePage() {
         </div>
 
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {filteredDishes.map((dish) => (
+          {filteredDishes.slice(0, visibleCount).map((dish) => (
             <div
               key={dish._id}
               className="bg-white shadow rounded-xl overflow-hidden"
@@ -253,12 +253,11 @@ export default function HomePage() {
                 </p>
                 <div className="mt-3 flex items-center justify-between">
                   <p className="text-red-500 font-bold">
-                    {' '}
                     {dish.price.toLocaleString('vi-VN')}đ
                   </p>
                   <button
                     onClick={() => navigate('/pre-order')}
-                    className="text-sm px-3 py-2 bg-[#FF6B35] text-white rounded-lg hover:bg-orange-600 cursor-pointer"
+                    className="text-sm px-3 py-2 bg-[#FF6B35] text-white rounded-lg hover:bg-orange-600"
                   >
                     Đi đặt món
                   </button>
@@ -266,6 +265,17 @@ export default function HomePage() {
               </div>
             </div>
           ))}
+
+          {visibleCount < filteredDishes.length && (
+            <div className="col-span-full flex justify-center mt-6">
+              <button
+                onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium"
+              >
+                Xem thêm
+              </button>
+            </div>
+          )}
 
           {filteredDishes.length === 0 && (
             <div className="col-span-full py-8 text-center text-gray-500">

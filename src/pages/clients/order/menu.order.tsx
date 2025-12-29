@@ -74,11 +74,6 @@ const MenuOrder = (props: IProps) => {
     setIsModalOpen(true);
   };
 
-  const handleConfirm = () => {
-    handleSendOrder(true);
-    setIsModalOpen(false);
-  };
-
   const handleCancelOrder = () => {
     setIsModalOpen(false);
   };
@@ -370,6 +365,18 @@ const MenuOrder = (props: IProps) => {
     setOpen(true);
   };
 
+  const handleConfirm = () => {
+    if (!realtimeOrder) return;
+    const orderItems = realtimeOrder?.orderItems;
+    console.log('Order: ', orderItems);
+    if (orderItems.length == 0) {
+      message.warning(`Đơn của bạn hiện tại trống không thể gửi order!`);
+      setIsModalOpen(false);
+      return;
+    }
+    handleSendOrder(true);
+    setIsModalOpen(false);
+  };
   return (
     <div>
       {/* Header */}
@@ -552,7 +559,7 @@ const MenuOrder = (props: IProps) => {
                 </button>
               </div>
 
-              {/* Món đang chế biến lần đầu */}
+              {/* Món đang chế biến*/}
               <h2 className="font-semibold text-[#7c2d12] mb-2">
                 Món đang chế biến
               </h2>
@@ -590,7 +597,9 @@ const MenuOrder = (props: IProps) => {
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500 text-sm">Chưa gọi món.</p>
+                  <p className="text-gray-500 text-sm">
+                    Các món đã được chế biến xong!
+                  </p>
                 )}
               </div>
 
@@ -599,59 +608,65 @@ const MenuOrder = (props: IProps) => {
                 <h3 className="font-semibold text-[#9d5237] mb-2 ml-2">
                   Món gọi thêm sau
                 </h3>
-                {addOrders.length > 0 ? (
-                  // Lặp qua từng batch
-                  addOrders.map((batch: any, batchIndex: number) => (
-                    <div key={batch.batchId} className="mb-4">
-                      <p className="font-medium text-[#9d5237] mb-2 ml-2">
-                        Lần gọi {batchIndex + 1}
-                      </p>
+                {addOrders.length > 0 &&
+                  (addOrders.filter((a) => a.orderItems.length > 0).length >
+                  0 ? (
+                    addOrders.map((batch: any) => {
+                      if (batch.orderItems.length > 0) {
+                        return (
+                          <div key={batch.batchId} className="mb-4">
+                            <p className="font-medium text-[#9d5237] mb-2 ml-2">
+                              Lần gọi mới
+                            </p>
 
-                      {batch.orderItems.length > 0 ? (
-                        batch.orderItems.map((oi: any) => (
-                          <div
-                            key={oi.menuItemId}
-                            className="border p-3 rounded-lg mb-2 bg-orange-100"
-                          >
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <p className="font-semibold text-[#7c2d12]">
-                                  {oi.name}
-                                </p>
+                            {batch.orderItems.length > 0 ? (
+                              batch.orderItems.map((oi: any) => (
+                                <div
+                                  key={oi.menuItemId}
+                                  className="border p-3 rounded-lg mb-2 bg-orange-100"
+                                >
+                                  <div className="flex justify-between items-center">
+                                    <div>
+                                      <p className="font-semibold text-[#7c2d12]">
+                                        {oi.name}
+                                      </p>
 
-                                {oi.variant?.size && (
-                                  <p className="text-sm text-gray-600">
-                                    Size: {oi.variant.size}
-                                  </p>
-                                )}
+                                      {oi.variant?.size && (
+                                        <p className="text-sm text-gray-600">
+                                          Size: {oi.variant.size}
+                                        </p>
+                                      )}
 
-                                {oi.toppings && oi.toppings.length > 0 && (
-                                  <p className="text-sm text-gray-600">
-                                    Toppings:{' '}
-                                    {oi.toppings
-                                      .map((t: any) => t.name)
-                                      .join(', ')}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="text-right font-semibold">
-                                {oi.quantity}×
-                              </div>
-                            </div>
+                                      {oi.toppings &&
+                                        oi.toppings.length > 0 && (
+                                          <p className="text-sm text-gray-600">
+                                            Toppings:{' '}
+                                            {oi.toppings
+                                              .map((t: any) => t.name)
+                                              .join(', ')}
+                                          </p>
+                                        )}
+                                    </div>
+                                    <div className="text-right font-semibold">
+                                      {oi.quantity}×
+                                    </div>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-gray-500 text-sm ml-2">
+                                Chưa có món nào trong lần gọi này.
+                              </p>
+                            )}
                           </div>
-                        ))
-                      ) : (
-                        <p className="text-gray-500 text-sm ml-2">
-                          Chưa có món nào trong lần gọi này.
-                        </p>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-sm ml-2">
-                    Chưa có món nào được gọi thêm.
-                  </p>
-                )}
+                        );
+                      }
+                    })
+                  ) : (
+                    <p className="text-gray-500 text-sm ml-2">
+                      Các món đã được chế biến xong!
+                    </p>
+                  ))}
               </div>
 
               {/* Món đã chế biến xong */}

@@ -19,6 +19,11 @@ export const formatTimeShort = (date: Date): string => {
   return `${hours}:${minutes}`;
 };
 
+export const formatIdOrder = (id?: string) => {
+  if (!id) return '—';
+  return id.slice(-6).toUpperCase();
+};
+
 export const getKitchenAreaLabel = (area: string): string => {
   const labels: Record<string, string> = {
     HOT: 'Khu Nóng',

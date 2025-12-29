@@ -36,6 +36,10 @@ import ProtectedCustomer from './components/auth/protected.customer';
 import ProtectedChef from './components/auth/protected.chef';
 import ProtectedStaff from './components/auth/protected.staff';
 import ProtectedAdmin from './components/auth/protected.admin';
+import MenuStatusTable from './pages/staff/manager.menu';
+import StaffPaymentManager from './pages/staff/manager.payment';
+import { ConfigProvider } from 'antd';
+import viVN from 'antd/locale/vi_VN';
 
 let router = createBrowserRouter([
   {
@@ -108,6 +112,14 @@ let router = createBrowserRouter([
     ),
   },
   {
+    path: '/staff/payments',
+    element: (
+      <ProtectedStaff>
+        <StaffPaymentManager />
+      </ProtectedStaff>
+    ),
+  },
+  {
     path: '/staff/bills',
     element: (
       <ProtectedStaff>
@@ -120,6 +132,14 @@ let router = createBrowserRouter([
     element: (
       <ProtectedStaff>
         <DeliverOrderManagement />
+      </ProtectedStaff>
+    ),
+  },
+  {
+    path: '/staff/menus',
+    element: (
+      <ProtectedStaff>
+        <MenuStatusTable />
       </ProtectedStaff>
     ),
   },
@@ -191,7 +211,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppProvider>
       <CartProvider>
-        <RouterProvider router={router} />
+        <ConfigProvider locale={viVN}>
+          <RouterProvider router={router} />
+        </ConfigProvider>
       </CartProvider>
     </AppProvider>
   </StrictMode>,

@@ -1,8 +1,9 @@
-import { Card, Tag } from 'antd';
+import { Card, message, Tag } from 'antd';
 import { Clock, User, Package } from 'lucide-react';
-import { formatTime } from '@/utils/helpers';
+import { formatIdOrder, formatTime } from '@/utils/helpers';
 import { useEffect, useState } from 'react';
 import { getPreOrderAPI } from '@/services/api';
+import { socket } from '@/services/socket';
 
 interface OrderOnlineCardProps {
   order: {
@@ -34,6 +35,15 @@ export default function OrderOnlineCard({
     fetchPreOrder();
   }, [order]);
 
+  const handleCancel = (order: any) => {
+    message.success(
+      `Đã hủy đơn hàng của khách tên ${
+        order.customerName
+      } có mã Order - ${formatIdOrder(order.id)}`,
+    );
+    socket.emit('cancelPreOrder', order.id);
+  };
+
   return (
     <Card
       hoverable
@@ -46,7 +56,7 @@ export default function OrderOnlineCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Tag color="blue" className="text-base font-bold px-3 py-1">
-              Order - {order.id.slice(-6).toUpperCase()}
+              Order - {formatIdOrder(order.id)}
             </Tag>
             <Tag color="purple" className="text-base font-bold px-3 py-1">
               {method}
@@ -90,6 +100,17 @@ export default function OrderOnlineCard({
         <div className="flex items-center gap-1 text-sm text-gray-500">
           <Clock size={14} />
           <span>{formatTime(order.createdAt)}</span>
+        </div>
+        <div className="flex justify-end">
+          <button
+            className="px-3 py-1 text-sm font-medium text-red-600 border border-red-500 rounded hover:bg-red-50"
+            onClick={(e) => {
+              e.stopPropagation(); // không mở onViewDetail
+              handleCancel(order);
+            }}
+          >
+            Hủy
+          </button>
         </div>
       </div>
     </Card>

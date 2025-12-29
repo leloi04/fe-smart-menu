@@ -49,7 +49,7 @@ const ManageOrderPage = () => {
       title: 'Khách hàng',
       dataIndex: 'customers',
       render: (_, entity) => {
-        if (!entity.customers?.length) return '—';
+        if (!entity.customers?.length) return 'Chưa có khách';
         return entity.customers.map((c: any) => c.name).join(', ');
       },
     },
@@ -60,7 +60,7 @@ const ManageOrderPage = () => {
       width: 160,
       render: (_, entity) => {
         const count = entity.orderItems.length;
-        if (count === 0) return '—';
+        if (count === 0) return 'Chưa order';
 
         return (
           <Tooltip
@@ -83,7 +83,9 @@ const ManageOrderPage = () => {
     {
       title: 'Tổng tiền',
       dataIndex: 'totalPrice',
-      valueType: 'money',
+      render(_, entity) {
+        return <>{entity.totalPrice.toLocaleString('vi-VN')}đ</>;
+      },
       width: 120,
     },
 
@@ -108,14 +110,14 @@ const ManageOrderPage = () => {
       dataIndex: 'progressStatus',
       filters: true,
       valueEnum: {
-        draft: { text: 'Nháp' },
+        draft: { text: 'Vừa đến' },
         processing: { text: 'Đang xử lý' },
         completed: { text: 'Hoàn tất' },
       },
       render: (_, entity) => {
         switch (entity.progressStatus) {
           case 'draft':
-            return <Tag color="orange">Nháp</Tag>;
+            return <Tag color="orange">Vừa đến</Tag>;
           case 'processing':
             return <Tag color="blue">Đang xử lý</Tag>;
           case 'completed':

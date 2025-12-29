@@ -1,17 +1,18 @@
 import CreateMenu from '@/components/admin/menu/create.menu';
 import UpdateMenu from '@/components/admin/menu/update.menu';
-import { deleteMenuAPI, getMenus } from '@/services/api';
+import { deleteMenuAPI, getCategoryAPI, getMenus } from '@/services/api';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { message, Button, Popconfirm, Space, Tag, Image } from 'antd';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const PRIMARY = '#FF6B35';
 
 const ManageMenuPage = () => {
   const [openModal, setOpenModal] = useState(false);
   const [openModalUpdate, setOpenModalUpdate] = useState(false);
+  const [category, setCategory] = useState<any[]>([]);
 
   const actionRef = useRef<ActionType | null>(null);
   const [meta, setMeta] = useState({
@@ -19,6 +20,16 @@ const ManageMenuPage = () => {
     pageSize: 10,
     total: 0,
   });
+
+  useEffect(() => {
+    const fetchCategory = async () => {
+      const res = await getCategoryAPI();
+      if (res.data) {
+        setCategory(res.data);
+      }
+    };
+    fetchCategory();
+  }, []);
 
   const [menuData, setMenuData] = useState<any>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
@@ -64,21 +75,30 @@ const ManageMenuPage = () => {
       title: 'Tên món',
       dataIndex: 'name',
       ellipsis: true,
+      fieldProps: {
+        placeholder: 'Nhập tên món ăn...',
+      },
     },
 
     {
       title: 'Danh mục',
       dataIndex: 'category',
       valueType: 'select',
-      valueEnum: {
-        drink: { text: 'Đồ uống' },
-        food: { text: 'Món ăn' },
-        dessert: { text: 'Tráng miệng' },
+      fieldProps: {
+        placeholder: 'Chọn loại món ăn...',
+        allowClear: true,
       },
+      valueEnum: category.reduce((acc, cur) => {
+        acc[cur] = { text: cur };
+        return acc;
+      }, {} as Record<string, { text: string }>),
     },
 
     {
       title: 'Giá',
+      fieldProps: {
+        placeholder: 'Nhập giá món ăn...',
+      },
       render(_, entity) {
         return <>{entity.price.toLocaleString('vi-VN')}đ</>;
       },

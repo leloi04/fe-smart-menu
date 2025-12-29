@@ -23,7 +23,7 @@ interface PendingModalProps {
 
 export default function PendingModal(props: PendingModalProps) {
   const { open, onClose, initialTab, setPendingCount } = props;
-  const [detailOrderId, setDetailOrderId] = useState<string | null>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [timestamp, setTimestamp] = useState<string>('');
   const [orderTableConfirm, setOrderTableConfirm] = useState<any[]>([]);
   const [orderOnlineConfirm, setOrderOnlineConfirm] = useState<any[]>([]);
@@ -258,6 +258,12 @@ export default function PendingModal(props: PendingModalProps) {
     }
   };
 
+  const handleDetailOrder = (order: Order) => {
+    if (!order) return;
+    setOrder(order);
+    setTimestamp(order.createdAt as any);
+  };
+
   const renderOrderCard = (order: Order) => (
     <Card key={order.id} className="mb-4 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start">
@@ -327,10 +333,7 @@ export default function PendingModal(props: PendingModalProps) {
           <Button
             type="link"
             size="small"
-            onClick={() => (
-              setDetailOrderId(order.tableNumber!.toString()),
-              setTimestamp(order.createdAt as any)
-            )}
+            onClick={() => handleDetailOrder(order)}
           >
             Xem chi tiết
           </Button>
@@ -437,12 +440,12 @@ export default function PendingModal(props: PendingModalProps) {
         />
       </Modal>
 
-      {detailOrderId && (
+      {order && (
         <PendingDetailModal
-          tableNumber={detailOrderId}
+          order={order}
           timestamp={timestamp}
-          open={!!detailOrderId}
-          onClose={() => setDetailOrderId(null)}
+          open={!!order}
+          onClose={() => setOrder(null)}
         />
       )}
     </>

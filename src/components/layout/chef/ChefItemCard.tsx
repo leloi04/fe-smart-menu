@@ -1,5 +1,5 @@
 // ChefItemCard.tsx
-import { Card, Button, Tag, Space } from 'antd';
+import { Card, Button, Tag, Space, message } from 'antd';
 import { Clock, CheckCircle, Utensils } from 'lucide-react';
 import { formatTime, getKitchenAreaLabel } from '@/utils/helpers';
 import type { KitchenArea } from '@/types';
@@ -30,6 +30,15 @@ export default function ChefItemCard({ item }: ChefItemCardProps) {
     : ` ${item.customerName}`;
 
   const handleCompletedItem = async (data: any) => {
+    if (data.customerName) {
+      message.success(
+        `Đã hoàn tất món ${data.name} của khách tên ${data.customerName}`,
+      );
+    } else if (data?.tableNumber) {
+      message.success(
+        `Đã hoàn tất món ${data.name} của bàn ${data.tableNumber}`,
+      );
+    }
     socket.emit('handleCompletedItem', data);
   };
 
