@@ -40,6 +40,8 @@ import MenuStatusTable from './pages/staff/manager.menu';
 import StaffPaymentManager from './pages/staff/manager.payment';
 import { ConfigProvider } from 'antd';
 import viVN from 'antd/locale/vi_VN';
+import RestaurantSettings from './pages/admin/setting';
+import ManagePromotionPage from './pages/admin/manager.promotion';
 
 let router = createBrowserRouter([
   {
@@ -200,6 +202,22 @@ let router = createBrowserRouter([
         element: (
           <ProtectedAdmin>
             <ManageUserPage />
+          </ProtectedAdmin>
+        ),
+      },
+      {
+        path: '/admin/promotions',
+        element: (
+          <ProtectedAdmin>
+            <ManagePromotionPage />
+          </ProtectedAdmin>
+        ),
+      },
+      {
+        path: '/admin/settings',
+        element: (
+          <ProtectedAdmin>
+            <RestaurantSettings />
           </ProtectedAdmin>
         ),
       },

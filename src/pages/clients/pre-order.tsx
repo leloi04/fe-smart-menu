@@ -115,42 +115,84 @@ function PreOrderPage() {
 
       {/* GRID ITEMS */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {paginatedDishes.map((dish) => (
-          <div
-            key={dish._id}
-            className="bg-white shadow rounded-xl overflow-hidden"
-          >
-            <img
-              src={`${import.meta.env.VITE_BACKEND_URL}/images/menu/${
-                dish.image
-              }`}
-              alt={dish.name}
-              className="w-full h-60 object-cover"
-            />
-            <div className="p-4">
-              <h4 className="font-semibold line-clamp-1">{dish.name}</h4>
+        {paginatedDishes.map((dish) => {
+          const isOutOfStock = dish.status === 'out_of_stock';
 
-              <p className="text-sm text-black/70 font-medium line-clamp-2 mt-2 mb-3">
-                {dish.description}
-              </p>
+          return (
+            <div
+              key={dish._id}
+              className={`relative bg-white shadow rounded-xl overflow-hidden transition
+          ${isOutOfStock ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-lg'}
+        `}
+            >
+              {/* IMAGE */}
+              <div className="relative">
+                <img
+                  src={`${import.meta.env.VITE_BACKEND_URL}/images/menu/${
+                    dish.image
+                  }`}
+                  alt={dish.name}
+                  className={`w-full h-60 object-cover ${
+                    isOutOfStock ? 'grayscale' : ''
+                  }`}
+                />
 
-              <div className="mt-3 flex items-center justify-between">
-                <p className="text-red-500 font-bold">
-                  {dish.price.toLocaleString('vi-VN')}đ
+                {/* OVERLAY HẾT MÓN */}
+                {isOutOfStock && (
+                  <>
+                    {/* lớp phủ mờ */}
+                    <div className="absolute inset-0 bg-black/40 z-10" />
+
+                    {/* đường chéo */}
+                    <div className="absolute inset-0 z-20 pointer-events-none">
+                      <div className="absolute top-1/2 left-[-20%] w-[140%] h-[2px] bg-red-500 rotate-[-20deg]" />
+                    </div>
+
+                    {/* text */}
+                    <div className="absolute inset-0 z-30 flex items-center justify-center">
+                      <span className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold tracking-wide">
+                        HẾT MÓN
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* CONTENT */}
+              <div className="p-4">
+                <h4 className="font-semibold line-clamp-1">{dish.name}</h4>
+
+                <p className="text-sm text-black/70 font-medium line-clamp-2 mt-2 mb-3">
+                  {dish.description}
                 </p>
 
-                <button
-                  onClick={() => {
-                    setOpen(true), setDataItem(dish);
-                  }}
-                  className="text-sm px-3 py-2 bg-[#FF6B35] text-white rounded-lg hover:bg-orange-600 cursor-pointer"
-                >
-                  Thêm vào giỏ
-                </button>
+                <div className="mt-3 flex items-center justify-between">
+                  <p className="text-red-500 font-bold">
+                    {dish.price.toLocaleString('vi-VN')}đ
+                  </p>
+
+                  <button
+                    disabled={isOutOfStock}
+                    onClick={() => {
+                      if (isOutOfStock) return;
+                      setOpen(true);
+                      setDataItem(dish);
+                    }}
+                    className={`text-sm px-3 py-2 rounded-lg transition
+                ${
+                  isOutOfStock
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-[#FF6B35] text-white hover:bg-orange-600'
+                }
+              `}
+                  >
+                    {isOutOfStock ? 'Đã hết' : 'Thêm vào giỏ'}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {paginatedDishes.length === 0 && (
           <div className="col-span-full py-8 text-center text-gray-500">

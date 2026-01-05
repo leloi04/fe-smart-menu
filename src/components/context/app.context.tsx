@@ -1,4 +1,4 @@
-import { fetchAccountAPI, logoutAPI } from '@/services/api';
+import { fetchAccountAPI, getSettingAPI, logoutAPI } from '@/services/api';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { ScaleLoader } from 'react-spinners';
 
@@ -9,6 +9,7 @@ interface IAppContext {
   isLoading: boolean;
   setIsAuthenticated: (v: boolean) => void;
   logout: () => void;
+  infoWeb: IInfoWeb | null;
 }
 
 const CurrentAppContext = createContext<IAppContext | null>(null);
@@ -21,6 +22,7 @@ export const AppProvider = ({ children }: TProp) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<IUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [infoWeb, setInfoWeb] = useState<IInfoWeb | null>(null);
 
   useEffect(() => {
     const fetchAccount = async () => {
@@ -42,6 +44,18 @@ export const AppProvider = ({ children }: TProp) => {
     };
 
     fetchAccount();
+  }, []);
+
+  useEffect(() => {
+    const getInfoRestaurant = async () => {
+      const res = await getSettingAPI();
+      if (res.data) {
+        const data = res.data;
+        setInfoWeb(data);
+      }
+    };
+
+    getInfoRestaurant();
   }, []);
 
   const logout = async () => {
@@ -73,6 +87,7 @@ export const AppProvider = ({ children }: TProp) => {
         isLoading,
         setIsAuthenticated,
         logout,
+        infoWeb,
       }}
     >
       {children}

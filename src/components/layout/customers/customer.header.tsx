@@ -14,7 +14,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 function AppHeader() {
-  const { logout } = useCurrentApp();
+  const { logout, infoWeb } = useCurrentApp();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -38,12 +38,22 @@ function AppHeader() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2">
-            <UtensilsCrossed className="w-8 h-8 text-[#FF6B35]" />
+            {infoWeb?.logo ? (
+              <img
+                src={`${import.meta.env.VITE_BACKEND_URL}/images/logo/${
+                  infoWeb.logo
+                }`}
+                alt="logo"
+                className="w-8 h-8 object-contain"
+              />
+            ) : (
+              <UtensilsCrossed className="w-8 h-8 text-[#FF6B35]" />
+            )}
             <span
               className="text-2xl font-bold text-gray-900"
               style={{ fontFamily: 'Poppins, sans-serif' }}
             >
-              Restaurant
+              {infoWeb?.name ? infoWeb.name : 'Restaurant'}
             </span>
           </Link>
 

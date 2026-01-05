@@ -41,6 +41,7 @@ type Reservation = {
   time: string;
   people: number;
   status: ReservationStatus;
+  tableNumber: string;
 };
 
 /* ================= COMPONENT ================= */
@@ -61,13 +62,14 @@ export default function ProfilePage() {
         activeTabReservation,
         user.phone.toString(),
       );
-      const reservations = data.data.map((r: IReservation) => {
+      const reservations = data.data.map((r: any) => {
         return {
           id: r._id,
           customer: r.customerName,
           time: `${r.date} - ${r.timeSlot}`,
           people: r.capacity,
           status: r.status,
+          tableNumber: r.tableId?.tableNumber || 'error',
         };
       });
       setReservations(reservations);
@@ -106,7 +108,10 @@ export default function ProfilePage() {
     <Card key={r.id} className="rounded-xl shadow-sm mb-4">
       <div className="flex flex-col md:flex-row md:justify-between gap-4">
         <div>
-          <p className="font-semibold">{r.customer}</p>
+          <p className="font-semibold">
+            {r.customer} -{' '}
+            <span className="text-green-600/100">Bàn {r.tableNumber}</span>
+          </p>
           <p className="text-gray-600">{r.time}</p>
           <p className="text-gray-600">Số người: {r.people}</p>
         </div>

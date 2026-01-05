@@ -1,21 +1,33 @@
-import { Phone, Mail, MapPin, Facebook, Instagram, } from 'lucide-react';
+import { useCurrentApp } from '@/components/context/app.context';
+import { Phone, Mail, MapPin, Facebook, Instagram } from 'lucide-react';
 
 function AppFooter() {
+  const { infoWeb } = useCurrentApp();
 
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-white text-lg font-bold mb-4">SmartMenu</h3>
+            <h3 className="text-white text-lg font-bold mb-4">
+              {infoWeb?.name ? infoWeb.name : 'SmartMenu'}
+            </h3>
             <p className="text-sm mb-4">
-              Hệ thống menu điện tử thông minh, giúp bạn gọi món dễ dàng và trải nghiệm ẩm thực tuyệt vời.
+              {infoWeb?.description
+                ? infoWeb?.description
+                : 'Hệ thống menu điện tử thông minh, giúp bạn gọi món dễ dàng và trải nghiệm ẩm thực tuyệt vời'}
             </p>
             <div className="flex gap-3">
-              <a href="#" className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center hover:bg-orange-500 transition-colors">
+              <a
+                href="#"
+                className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center hover:bg-orange-500 transition-colors"
+              >
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center hover:bg-orange-500 transition-colors">
+              <a
+                href="#"
+                className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center hover:bg-orange-500 transition-colors"
+              >
                 <Instagram className="w-5 h-5" />
               </a>
             </div>
@@ -26,15 +38,23 @@ function AppFooter() {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-orange-500" />
-                <span className="text-sm">0123 456 789</span>
+                <span className="text-sm">
+                  {infoWeb?.phone ? infoWeb.phone : '0123 456 789'}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-orange-500" />
-                <span className="text-sm">contact@smartmenu.vn</span>
+                <span className="text-sm">
+                  {infoWeb?.email ? infoWeb?.email : 'contact@smartmenu.vn'}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-orange-500" />
-                <span className="text-sm">123 Đường ABC, Quận 1, TP.HCM</span>
+                <span className="text-sm">
+                  {infoWeb?.address
+                    ? infoWeb?.address
+                    : '123 Đường ABC, Quận 1, TP.HCM'}
+                </span>
               </div>
             </div>
           </div>
@@ -44,11 +64,19 @@ function AppFooter() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>Thứ 2 - Thứ 6:</span>
-                <span className="text-white">10:00 - 22:00</span>
+                <span className="text-white">
+                  {infoWeb?.weekday.enabled
+                    ? `${infoWeb.weekday.open} - ${infoWeb.weekday.open}`
+                    : '10:00 - 22:00'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Thứ 7 - Chủ nhật:</span>
-                <span className="text-white">09:00 - 23:00</span>
+                <span className="text-white">
+                  {infoWeb?.weekend.enabled
+                    ? `${infoWeb.weekend.open} - ${infoWeb.weekend.open}`
+                    : '9:00 - 23:00'}
+                </span>
               </div>
             </div>
           </div>
@@ -62,4 +90,4 @@ function AppFooter() {
   );
 }
 
-export default AppFooter
+export default AppFooter;

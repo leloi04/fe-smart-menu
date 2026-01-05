@@ -343,6 +343,53 @@ const createPaymnetAPI = (
   return axios.post<IBackendRes<any>>(urlBackend, { orderId, amount, orderIn });
 };
 
+// Promotion API
+const reorderPromotionsAPI = (ids: string[]) => {
+  const urlBackend = `/promotions/reorder/bulk`;
+  return axios.patch<IBackendRes<any>>(urlBackend, { ids });
+};
+
+const getPromotionsAPI = (query: string) => {
+  const urlBackend = `/promotions?${query}`;
+  return axios.get<IBackendRes<any>>(urlBackend);
+};
+
+const getActivePromotionsAPI = () => {
+  const urlBackend = `/promotions/active`;
+  return axios.post<IBackendRes<any>>(urlBackend);
+};
+
+const deletePromotionAPI = (id: string) => {
+  const urlBackend = `/promotions/${id}`;
+  return axios.delete<IBackendRes<any>>(urlBackend);
+};
+
+const createPromotionAPI = (payload: any) => {
+  const urlBackend = `/promotions`;
+  return axios.post<IBackendRes<any>>(urlBackend, payload);
+};
+
+const updatePromotionAPI = (id: string, payload: any) => {
+  const urlBackend = `/promotions/${id}`;
+  return axios.patch<IBackendRes<any>>(urlBackend, payload);
+};
+
+// Setting API
+const updateSettingAPI = (payload: any) => {
+  const urlBackend = `/settings`;
+  return axios.patch<IBackendRes<any>>(urlBackend, payload);
+};
+
+const getSettingAPI = () => {
+  const urlBackend = `/settings`;
+  return axios.get<IBackendRes<any>>(urlBackend);
+};
+
+const generateShiftsByDateAPI = (date: string) => {
+  const urlBackend = `/settings/generate`;
+  return axios.post<IBackendRes<any>>(urlBackend, { date });
+};
+
 // Summary for Dashboard
 const summaryOrderAPI = (month: string, year: string) => {
   const urlBackend = `/orders/summary`;
@@ -462,4 +509,13 @@ export {
   summaryPaymentAPI,
   summaryPaymentMonthlyAPI,
   summaryReservationTodayAPI,
+  reorderPromotionsAPI,
+  getPromotionsAPI,
+  deletePromotionAPI,
+  createPromotionAPI,
+  getActivePromotionsAPI,
+  updatePromotionAPI,
+  updateSettingAPI,
+  getSettingAPI,
+  generateShiftsByDateAPI,
 };

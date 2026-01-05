@@ -1,44 +1,34 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, MapPin, Star } from 'lucide-react';
+import { ArrowRight, Clock, MapPin, Star } from 'lucide-react';
 import { Card } from 'antd';
-import { fetchMenuItemsAPI, getCategoryAPI } from '@/services/api';
+import {
+  fetchMenuItemsAPI,
+  getActivePromotionsAPI,
+  getCategoryAPI,
+} from '@/services/api';
 import { useNavigate } from 'react-router-dom';
 import BookingForm from './home/form.reservation';
 
+interface ISlides {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  link?: string;
+}
+
 export default function HomePage() {
-  const slides = [
+  // --- STATE ---
+  const [slides, setSlides] = useState<ISlides[]>([
     {
-      id: 1,
+      id: '1',
       title: 'Giảm giá 30% tất cả các món cuối tuần!',
-      subtitle: 'Chỉ từ 99.000đ - Áp dụng cuối tuần',
+      description: 'Chỉ từ 99.000đ - Áp dụng cuối tuần',
       image:
         'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=1600&q=80',
     },
-    {
-      id: 2,
-      title: 'Combo cặp đôi: 2 món + tráng miệng',
-      subtitle: 'Tiết kiệm 20% cho 2 người',
-      image:
-        'https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=1600&q=80',
-    },
-    {
-      id: 3,
-      title: 'Món mới ra mắt: Lẩu Thái Hải Sản',
-      subtitle: 'Hương vị cay nồng, ăn cùng bạn bè là tuyệt!',
-      image:
-        'https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&w=1600&q=80',
-    },
-    {
-      id: 4,
-      title: 'Happy Hour: Đồ uống giảm 50%',
-      subtitle: '15:00 - 18:00 mỗi ngày',
-      image:
-        'https://images.unsplash.com/photo-1541542684-6f8f3b3d06d7?auto=format&fit=crop&w=1600&q=80',
-    },
-  ];
-
-  // --- STATE ---
+  ]);
   const [categories, setCategories] = useState<any[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const slideTimer = useRef<number | null>(null);
@@ -52,6 +42,31 @@ export default function HomePage() {
   const ITEMS_PER_PAGE = 8;
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const navigate = useNavigate();
+
+  // -- SLiders --
+  useEffect(() => {
+    const fetchPromotion = async () => {
+      const res = await getActivePromotionsAPI();
+      if (res.data) {
+        const dataMap = res.data.map((s: any) => {
+          return {
+            id: s._id,
+            title: s.title,
+            description: s.description,
+            image: `${
+              import.meta.env.VITE_BACKEND_URL
+            }/images/promotion/${encodeURIComponent(s.imageUrl)}`,
+            link: s?.linkValue,
+          };
+        });
+        if (dataMap.length > 0) {
+          setSlides(dataMap);
+        }
+      }
+    };
+
+    fetchPromotion();
+  }, []);
 
   // --- Slider: autoplay + smooth transition ---
   useEffect(() => {
@@ -157,9 +172,18 @@ export default function HomePage() {
                   {slides[currentSlide].title}
                 </h2>
                 <p className="text-white/90 mt-4 text-lg md:text-xl">
-                  {slides[currentSlide].subtitle}
+                  {slides[currentSlide].description}
                 </p>
                 <div className="mt-6 flex gap-4">
+                  {slides[currentSlide]?.link && (
+                    <button
+                      onClick={() => navigate('/pre-order')}
+                      className="bg-[#fff] flex text-black px-6 py-3 rounded-xl hover:bg-[#ccc] transition cursor-pointer"
+                    >
+                      Xem chi tiết
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </button>
+                  )}
                   <button
                     onClick={() => navigate('/pre-order')}
                     className="bg-[#FF6B35] text-white px-6 py-3 rounded-xl hover:bg-orange-600 transition cursor-pointer"

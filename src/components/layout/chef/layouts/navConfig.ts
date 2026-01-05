@@ -11,6 +11,7 @@ import {
   ClipboardClock,
   SquareMenu,
   Landmark,
+  Wallpaper,
 } from 'lucide-react';
 
 export const adminNav = [
@@ -30,6 +31,12 @@ export const adminNav = [
     label: 'Đặt bàn',
   },
   { id: 'staff', to: '/admin/users', icon: Users, label: 'Nhân viên' },
+  {
+    id: 'promotion',
+    to: '/admin/promotions',
+    icon: Wallpaper,
+    label: 'Quản lý promotions',
+  },
   { id: 'settings', to: '/admin/settings', icon: Settings, label: 'Cài đặt' },
 ];
 

@@ -201,4 +201,28 @@ declare global {
     payment: string;
     note: string;
   }
+
+  interface IInfoWeb {
+    address: string;
+    allowCrossShiftOrder: boolean;
+    email: string;
+    endOfDayTime: string;
+    lockOrderAfterClose: boolean;
+    name: string;
+    phone: string;
+    slotDurationMinutes: number;
+    startOffsetMinutes: number;
+    description: string;
+    logo: string;
+    weekend: {
+      enabled: boolean;
+      open: string;
+      close: string;
+    };
+    weekday: {
+      enabled: boolean;
+      open: string;
+      close: string;
+    };
+  }
 }

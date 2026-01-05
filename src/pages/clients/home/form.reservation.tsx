@@ -8,7 +8,11 @@ import {
   StickyNote,
   Table2Icon,
 } from 'lucide-react';
-import { getAllTableAPI, validateReservationAPI } from '@/services/api';
+import {
+  generateShiftsByDateAPI,
+  getAllTableAPI,
+  validateReservationAPI,
+} from '@/services/api';
 import { socket } from '@/services/socket';
 import { message } from 'antd';
 
@@ -71,6 +75,8 @@ interface SelectOption {
 
 export default function BookingForm() {
   const [tables, setTables] = useState<SelectOption[]>([]);
+  const [date, setDate] = useState<string>('');
+  const [listTime, setListTime] = useState<any[]>([]);
   const [form, setForm] = useState<FormState>({
     name: '',
     phone: '',
@@ -80,6 +86,22 @@ export default function BookingForm() {
     notes: '',
     tableId: '',
   });
+
+  useEffect(() => {
+    if (!date) return;
+
+    const getListDateCurrent = async () => {
+      const res = await generateShiftsByDateAPI(date);
+      if (res.data) {
+        const data = res.data;
+        const listTime = data.reduce((acc: any, cur: any) => {
+          return [...acc, cur.startTime];
+        }, []);
+        setListTime(listTime);
+      }
+    };
+    getListDateCurrent();
+  }, [date]);
 
   useEffect(() => {
     const fetchTables = async () => {
@@ -173,7 +195,10 @@ export default function BookingForm() {
           icon={<Calendar size={18} />}
           min={new Date().toISOString().split('T')[0]}
           value={form.date}
-          onChange={(v: string) => setForm({ ...form, date: v })}
+          onChange={(v: string) => {
+            setDate(v);
+            setForm({ ...form, date: v });
+          }}
         />
 
         <Select
@@ -181,7 +206,7 @@ export default function BookingForm() {
           icon={<Clock size={18} />}
           value={form.time}
           onChange={(v: string) => setForm({ ...form, time: v })}
-          options={['10:00', '12:00', '14:00', '16:00', '18:00', '20:00']}
+          options={listTime}
         />
 
         <Select

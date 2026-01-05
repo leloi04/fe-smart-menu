@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Calendar, Users, Clock, CheckCircle2, XCircle } from 'lucide-react';
-import { getAllTableAPI } from '@/services/api';
+import { generateShiftsByDateAPI, getAllTableAPI } from '@/services/api';
 import { useCurrentApp } from '@/components/context/app.context';
 import { socket } from '@/services/socket';
 import { message } from 'antd';
@@ -19,13 +19,31 @@ export default function BookingPage() {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0],
   );
-  const [selectedTime, setSelectedTime] = useState('18:00');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [listTime, setListTime] = useState<any[]>([]);
   const [numberOfGuests, setNumberOfGuests] = useState(2);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const customerName = user?.name || '';
   const customerPhone = user?.phone || '';
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    const getListDateCurrent = async () => {
+      const res = await generateShiftsByDateAPI(selectedDate);
+      if (res.data) {
+        const data = res.data;
+        const listTime = data.reduce((acc: any, cur: any) => {
+          return [...acc, cur.startTime];
+        }, []);
+        setListTime(listTime);
+        setSelectedTime(listTime[0]);
+      }
+    };
+    getListDateCurrent();
+  }, [selectedDate]);
 
   // Socket realtime
   useEffect(() => {
@@ -135,7 +153,6 @@ export default function BookingPage() {
   // =======================
   // UI Helpers
   // =======================
-  const timeSlots = ['10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
 
   function getTableStatusColor(status: string) {
     switch (status) {
@@ -201,11 +218,14 @@ export default function BookingPage() {
                   <Clock className="inline w-4 h-4 mr-1" /> Giờ
                 </label>
                 <select
+                  defaultValue={listTime[0]}
                   value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedTime(e.target.value);
+                  }}
                   className="w-full px-4 py-3 border rounded-lg"
                 >
-                  {timeSlots.map((t) => (
+                  {listTime.map((t) => (
                     <option key={t}>{t}</option>
                   ))}
                 </select>

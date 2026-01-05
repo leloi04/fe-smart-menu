@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function CartPage() {
   const { cart: dataCart, removeItem, updateItem, totalPrice } = useCart();
-  const { user } = useCurrentApp();
+  const { user, infoWeb } = useCurrentApp();
   const navigate = useNavigate();
   const [cart, setCart] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
@@ -25,7 +25,7 @@ export default function CartPage() {
   const [method, setMethod] = useState<'pickup' | 'ship'>('pickup');
   const [address, setAddress] = useState('');
   const [payment, setPayment] = useState<'cod' | 'bank'>('cod');
-  const FIXED_STORE_ADDRESS = import.meta.env.VITE_ADDRESS;
+  const FIXED_STORE_ADDRESS = infoWeb?.address || 'Học viện kỹ thuật mật mã';
 
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [shipFee, setShipFee] = useState<number>(0);
@@ -68,7 +68,7 @@ export default function CartPage() {
       setIsCalculatingShip(true);
 
       // 1️⃣ Toạ độ quán (fix cứng)
-      const storeCoords = await getCoordinates(FIXED_STORE_ADDRESS);
+      const storeCoords = await getCoordinates(FIXED_STORE_ADDRESS!);
 
       // 2️⃣ Toạ độ khách
       const customerCoords = await getCoordinates(deliveryAddress);
@@ -280,17 +280,16 @@ export default function CartPage() {
         message.warning('Thiếu thông tin về địa điểm nhận hàng!');
         return;
       }
+      if (distanceKm === null) {
+        message.warning(
+          'Địa chỉ của bạn nhập vào không hợp lệ vui lòng nhập địa chỉ khác!',
+        );
+        return;
+      }
     }
 
     if (isCalculatingShip) {
       message.warning('Chưa tính xong phí vận chuyển xin chờ đôi lát!');
-      return;
-    }
-
-    if (distanceKm === null) {
-      message.warning(
-        'Địa chỉ của bạn nhập vào không hợp lệ vui lòng nhập địa chỉ khác!',
-      );
       return;
     }
 
