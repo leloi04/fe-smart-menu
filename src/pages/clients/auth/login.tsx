@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { UtensilsCrossed } from 'lucide-react';
 import { Button, Card, Input, message } from 'antd';
-import { loginAPI } from '@/services/api';
+import { loginAPI, loginWithGoogleAPI } from '@/services/api';
 import { useCurrentApp } from '@/components/context/app.context';
+import { useGoogleLogin } from '@react-oauth/google';
 import {
   ADMIN_ROLE_ID,
   CHEF_ROLE_ID,
   STAFF_ROLE_ID,
 } from '@/types/global.constanst';
+import axios from 'axios';
 
 export const LoginPage = () => {
   const { setIsAuthenticated, setUser } = useCurrentApp();
@@ -16,6 +18,72 @@ export const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchParams] = useSearchParams();
+
+  const loginWithGoogle = useGoogleLogin({
+    flow: 'implicit',
+    onSuccess: async (tokenResponse) => {
+      try {
+        setLoading(true);
+        const googleRes = await axios.get(
+          'https://www.googleapis.com/oauth2/v3/userinfo',
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          },
+        );
+        const data = googleRes?.data;
+
+        const payload = {
+          email: data.email,
+          name: data.name,
+          avatar: data.picture,
+          googleId: data.sub,
+        };
+
+        const res = await loginWithGoogleAPI(payload);
+
+        const role = res.data.user.role;
+        const userInfo = {
+          userId: res.data.user._id,
+          name: res.data.user.name,
+          isGuest: false,
+        };
+        setIsAuthenticated(true);
+        setUser(res.data.user as any);
+        localStorage.setItem('access_token', res.data.access_token);
+        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+
+        message.success('Đăng nhập Google thành công');
+
+        const redirectUrl = searchParams.get('redirect');
+        if (redirectUrl) {
+          navigate(decodeURIComponent(redirectUrl), { replace: true });
+          return;
+        }
+
+        switch (role._id) {
+          case ADMIN_ROLE_ID:
+            navigate('/admin');
+            break;
+          case CHEF_ROLE_ID:
+            navigate('/chef');
+            break;
+          case STAFF_ROLE_ID:
+            navigate('/staff');
+            break;
+          default:
+            navigate('/');
+            break;
+        }
+      } catch {
+        message.error('Đăng nhập Google thất bại');
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => message.error('Google Login thất bại'),
+  });
 
   const navigate = useNavigate();
 
@@ -74,11 +142,6 @@ export const LoginPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleLogin = () => {
-    // Thêm logic OAuth Google ở đây
-    message.info('Đăng nhập với Google chưa được triển khai');
   };
 
   const handleRegister = () => {
@@ -148,7 +211,7 @@ export const LoginPage = () => {
             type="default"
             size="large"
             className="w-full flex items-center justify-center gap-2"
-            onClick={handleGoogleLogin}
+            onClick={() => loginWithGoogle()}
           >
             <div className="text-[#FF6B35]">Đăng nhập với Google</div>
           </Button>

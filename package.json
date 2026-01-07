@@ -13,6 +13,7 @@
     "@ant-design/icons": "6.1.0",
     "@ant-design/pro-components": "2.8.10",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@react-oauth/google": "0.13.4",
     "@tailwindcss/vite": "^4.1.17",
     "@types/react-csv": "1.1.10",
     "antd": "5.29.0",

@@ -6,6 +6,11 @@ const loginAPI = (username: string, password: string) => {
   return axios.post<IBackendRes<ILogin>>(urlBackend, { username, password });
 };
 
+const loginWithGoogleAPI = (payload: any) => {
+  const urlBackend = '/auth/google';
+  return axios.post<IBackendRes<ILogin>>(urlBackend, payload);
+};
+
 const fetchAccountAPI = () => {
   const urlBackend = '/auth/account';
   return axios.get<IBackendRes<IFetchAccount>>(urlBackend);
@@ -242,6 +247,11 @@ const fetchPreOrderUncompleted = () => {
 
 const fetchPreOrderCompleted = () => {
   const urlBackend = `/pre-order/completed`;
+  return axios.post<IBackendRes<any>>(urlBackend);
+};
+
+const fetchPreOrderCancelled = () => {
+  const urlBackend = `/pre-order/cancelled`;
   return axios.post<IBackendRes<any>>(urlBackend);
 };
 
@@ -518,4 +528,6 @@ export {
   updateSettingAPI,
   getSettingAPI,
   generateShiftsByDateAPI,
+  loginWithGoogleAPI,
+  fetchPreOrderCancelled,
 };

@@ -58,14 +58,19 @@ const UpdateUserProfile = (props: IProps) => {
     });
 
     if (userData.avatar) {
+      const isGoogleAvatar = userData.avatar.startsWith('http');
+
       const file: UploadFile = {
         uid: '-1',
-        name: userData.avatar,
+        name: isGoogleAvatar ? 'google-avatar' : userData.avatar,
         status: 'done',
-        url: `${import.meta.env.VITE_BACKEND_URL}/images/avatar/${
-          userData.avatar
-        }`,
+        url: isGoogleAvatar
+          ? userData.avatar
+          : `${import.meta.env.VITE_BACKEND_URL}/images/avatar/${
+              userData.avatar
+            }`,
       };
+
       setFileList([file]);
       setAvatar(userData.avatar);
     }

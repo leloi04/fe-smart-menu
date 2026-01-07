@@ -5,6 +5,11 @@ const instance = axios.create({
   withCredentials: true,
 });
 
+const refreshAxios = axios.create({
+  baseURL: import.meta.env.VITE_BACKEND_URL,
+  withCredentials: true,
+});
+
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
@@ -53,14 +58,11 @@ instance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const res = await instance.get('/auth/refresh-token');
+        const res = await refreshAxios.get('/auth/refresh-token');
         const newToken = res.data?.access_token;
         if (!newToken) throw new Error('Refresh token expired');
 
         localStorage.setItem('access_token', newToken);
-        instance.defaults.headers.common[
-          'Authorization'
-        ] = `Bearer ${newToken}`;
 
         processQueue(null, newToken);
 

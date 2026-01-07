@@ -23,6 +23,7 @@ import {
   cancelTableReservationAPI,
   checkInTableAPI,
   completePreOrderAPI,
+  fetchPreOrderCancelled,
   fetchPreOrderCompleted,
   fetchPreOrderUncompleted,
   fetchReservationDataInStatusAPI,
@@ -154,6 +155,7 @@ export default function ProfilePage() {
   const PAGE_SIZE = 3;
   const [processingOrders, setProcessingOrders] = useState<any[]>([]);
   const [completedOrders, setCompletedOrders] = useState<any[]>([]);
+  const [cancelledOrders, setCancelledOrders] = useState<any[]>([]);
 
   const [reservationLimit, setReservationLimit] = useState(PAGE_SIZE);
   const [orderLimit, setOrderLimit] = useState(PAGE_SIZE);
@@ -246,9 +248,12 @@ export default function ProfilePage() {
       if (activeTabOrder === 'delivering') {
         const res = await fetchPreOrderUncompleted();
         setProcessingOrders(res.data.map(mapOrder));
-      } else {
+      } else if (activeTabOrder === 'completed') {
         const res = await fetchPreOrderCompleted();
         setCompletedOrders(res.data.map(mapOrder));
+      } else {
+        const res = await fetchPreOrderCancelled();
+        setCancelledOrders(res.data.map(mapOrder));
       }
     };
 
@@ -265,18 +270,30 @@ export default function ProfilePage() {
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
+  const getAvatarUrl = (avatar?: string) => {
+    if (!avatar) return undefined;
+
+    if (avatar.startsWith('http')) {
+      return avatar;
+    }
+
+    return `${import.meta.env.VITE_BACKEND_URL}/images/avatar/${avatar}`;
+  };
+
   return (
     <div className="container mx-auto px-6 py-10 flex flex-col gap-10">
       {/* ================= ACCOUNT ================= */}
       <Card className="rounded-2xl shadow-md">
         <div className="flex flex-col md:flex-row gap-6 items-center">
           {user?.avatar ? (
-            <Avatar
-              size={96}
-              src={`${import.meta.env.VITE_BACKEND_URL}/images/avatar/${
-                user.avatar
-              }`}
-            />
+            <Avatar size={96}>
+              <img
+                src={getAvatarUrl(user.avatar)}
+                alt="avatar"
+                referrerPolicy="no-referrer"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </Avatar>
           ) : (
             <Avatar size={96} icon={<UserOutlined />} />
           )}
@@ -503,6 +520,53 @@ export default function ProfilePage() {
                 </>
               ),
             },
+            {
+              key: 'cancelled',
+              label: 'Đã huỷ',
+              children: (
+                <>
+                  {cancelledOrders.slice(0, orderLimit).map((o) => (
+                    <Card key={o.id} className="rounded-xl shadow-sm mb-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-semibold text-red-600">
+                            Mã đơn: {o.orderCode}
+                          </p>
+                          <p className="text-gray-600">
+                            {formatDateVN(o.createdAt)}
+                          </p>
+                        </div>
+
+                        <Tag color="red">Đã huỷ</Tag>
+
+                        <button
+                          onClick={() => {
+                            setSelectedOrder(o);
+                            setOpenDetail(true);
+                          }}
+                          className="px-3 py-2 bg-gray-100 rounded-lg"
+                        >
+                          Xem chi tiết
+                        </button>
+                      </div>
+                    </Card>
+                  ))}
+
+                  {cancelledOrders.length > orderLimit && (
+                    <div className="text-center mt-4">
+                      <button
+                        onClick={() =>
+                          setOrderLimit((prev) => prev + PAGE_SIZE)
+                        }
+                        className="px-4 py-2 bg-gray-100 rounded-lg"
+                      >
+                        Xem thêm đơn hàng
+                      </button>
+                    </div>
+                  )}
+                </>
+              ),
+            },
           ]}
         />
       </section>
@@ -548,6 +612,12 @@ export default function ProfilePage() {
                   title: 'Hoàn thành',
                   icon: <HomeOutlined />,
                   statuses: ['completed'],
+                },
+                {
+                  key: 'cancelled',
+                  title: 'Đơn hàng đã bị huỷ',
+                  icon: <LockOutlined />,
+                  statuses: ['cancelled'],
                 },
               ].map((step) => {
                 const trackingItem = selectedOrder.tracking.find((t: any) =>

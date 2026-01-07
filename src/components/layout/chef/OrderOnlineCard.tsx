@@ -1,4 +1,4 @@
-import { Card, message, Tag } from 'antd';
+import { Card, message, Modal, Tag } from 'antd';
 import { Clock, User, Package } from 'lucide-react';
 import { formatIdOrder, formatTime } from '@/utils/helpers';
 import { useEffect, useState } from 'react';
@@ -105,8 +105,17 @@ export default function OrderOnlineCard({
           <button
             className="px-3 py-1 text-sm font-medium text-red-600 border border-red-500 rounded hover:bg-red-50"
             onClick={(e) => {
-              e.stopPropagation(); // không mở onViewDetail
-              handleCancel(order);
+              e.stopPropagation();
+              Modal.confirm({
+                title: `Xác nhận hủy order của khách tên ${order.customerName}`,
+                content: 'Bạn có chắc chắn muốn hủy đơn hàng này?',
+                okText: 'Hủy đơn',
+                cancelText: 'Quay lại',
+                okButtonProps: { danger: true },
+                onOk: async () => {
+                  handleCancel(order);
+                },
+              });
             }}
           >
             Hủy

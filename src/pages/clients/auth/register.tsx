@@ -41,7 +41,9 @@ export const RegisterPage = () => {
       message.success('Đăng ký thành công');
       navigate('/login');
     } catch (err) {
-      message.error('Đăng ký thất bại, thử lại');
+      message.error(
+        (err as any).response.data.message || 'Đăng ký thất bại, thử lại',
+      );
     } finally {
       setLoading(false);
     }

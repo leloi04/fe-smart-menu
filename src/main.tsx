@@ -1,4 +1,5 @@
 import { StrictMode } from 'react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { createRoot } from 'react-dom/client';
 import 'styles/global.scss';
 import 'styles/tailwind-base.css';
@@ -228,11 +229,13 @@ let router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppProvider>
-      <CartProvider>
-        <ConfigProvider locale={viVN}>
-          <RouterProvider router={router} />
-        </ConfigProvider>
-      </CartProvider>
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+        <CartProvider>
+          <ConfigProvider locale={viVN}>
+            <RouterProvider router={router} />
+          </ConfigProvider>
+        </CartProvider>
+      </GoogleOAuthProvider>
     </AppProvider>
   </StrictMode>,
 );

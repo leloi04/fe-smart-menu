@@ -75,7 +75,9 @@ interface SelectOption {
 
 export default function BookingForm() {
   const [tables, setTables] = useState<SelectOption[]>([]);
-  const [date, setDate] = useState<string>('');
+  const [date, setDate] = useState<string>(
+    new Date().toISOString().split('T')[0],
+  );
   const [listTime, setListTime] = useState<any[]>([]);
   const [form, setForm] = useState<FormState>({
     name: '',
@@ -194,7 +196,7 @@ export default function BookingForm() {
           type="date"
           icon={<Calendar size={18} />}
           min={new Date().toISOString().split('T')[0]}
-          value={form.date}
+          value={date}
           onChange={(v: string) => {
             setDate(v);
             setForm({ ...form, date: v });
