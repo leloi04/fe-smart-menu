@@ -14,13 +14,13 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 function AppHeader() {
-  const { logout, infoWeb } = useCurrentApp();
+  const { logout, infoWeb, user } = useCurrentApp();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 
   const handleLogout = () => {
-    message.success('Đăng xuất thành công');
+    if (user) message.success('Đăng xuất thành công');
     logout();
     navigate('/login');
   };
@@ -81,7 +81,7 @@ function AppHeader() {
               onClick={handleLogout}
               className="text-gray-700 hover:text-[#FF6B35] transition-colors"
             >
-              Đăng xuất
+              {user ? 'Đăng xuất' : 'Đăng nhập'}
             </button>
           </nav>
 
@@ -125,7 +125,7 @@ function AppHeader() {
               onClick={handleLogout}
               className="w-full text-left px-3 py-2 text-gray-700 hover:bg-orange-50 rounded-lg"
             >
-              Đăng xuất
+              {user ? 'Đăng xuất' : 'Đăng nhập'}
             </button>
           </nav>
         </div>

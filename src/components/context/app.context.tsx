@@ -1,9 +1,4 @@
-import {
-  fetchAccountAPI,
-  getSettingAPI,
-  logoutAPI,
-  updateUserAPI,
-} from '@/services/api';
+import { fetchAccountAPI, getSettingAPI, logoutAPI } from '@/services/api';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { ScaleLoader } from 'react-spinners';
 
@@ -28,7 +23,6 @@ export const AppProvider = ({ children }: TProp) => {
   const [user, setUser] = useState<IUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [infoWeb, setInfoWeb] = useState<IInfoWeb | null>(null);
-  const [hasPromptedPhone, setHasPromptedPhone] = useState(false);
 
   useEffect(() => {
     const fetchAccount = async () => {
@@ -51,54 +45,6 @@ export const AppProvider = ({ children }: TProp) => {
 
     fetchAccount();
   }, []);
-
-  useEffect(() => {
-    if (!user || hasPromptedPhone) return;
-
-    if (!user.phone) {
-      setHasPromptedPhone(true);
-
-      const phone = window.prompt(
-        'Vui lòng nhập số điện thoại để tiếp tục sử dụng hệ thống',
-      );
-
-      if (!phone) {
-        window.location.reload();
-        return;
-      }
-
-      const phoneRegex = /^\d{10}$/;
-      if (!phoneRegex.test(phone)) {
-        alert('Số điện thoại phải gồm đúng 10 chữ số');
-        window.location.reload();
-        return;
-      }
-
-      const updateUser = async () => {
-        try {
-          const payload = {
-            email: user.email,
-            name: user.name,
-            phone,
-          };
-
-          const res = await updateUserAPI(user._id, payload);
-
-          if (res?.data) {
-            logout();
-            window.location.href = '/login';
-          }
-        } catch (error: any) {
-          const message =
-            error?.response?.data?.message || 'Cập nhật số điện thoại thất bại';
-          alert(message);
-          window.location.reload();
-        }
-      };
-
-      updateUser();
-    }
-  }, [user, hasPromptedPhone]);
 
   useEffect(() => {
     const getInfoRestaurant = async () => {

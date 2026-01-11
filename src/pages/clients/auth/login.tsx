@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { UtensilsCrossed } from 'lucide-react';
 import { Button, Card, Input, message } from 'antd';
-import { loginAPI, loginWithGoogleAPI } from '@/services/api';
+import {
+  handleCheckedPhoneAPI,
+  loginAPI,
+  loginWithGoogleAPI,
+} from '@/services/api';
 import { useCurrentApp } from '@/components/context/app.context';
 import { useGoogleLogin } from '@react-oauth/google';
 import {
@@ -11,6 +15,8 @@ import {
   STAFF_ROLE_ID,
 } from '@/types/global.constanst';
 import axios from 'axios';
+import PhoneRequiredModal from './phone-required.modal';
+import ForgotPasswordModal from '@/components/auth/forget.password';
 
 export const LoginPage = () => {
   const { setIsAuthenticated, setUser } = useCurrentApp();
@@ -18,6 +24,47 @@ export const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchParams] = useSearchParams();
+  const [openModal, setOpenModal] = useState<boolean>(false);
+  const [googleUser, setGoogleUser] = useState<any>(null);
+  const [openForgot, setOpenForgot] = useState(false);
+
+  const handleLoginWithGoogle = async (data: any, phone?: string) => {
+    const payload = {
+      ...data,
+      phone,
+    };
+
+    const res = await loginWithGoogleAPI(payload);
+
+    const role = res.data.user.role;
+    const userInfo = {
+      userId: res.data.user._id,
+      name: res.data.user.name,
+      isGuest: false,
+    };
+
+    setIsAuthenticated(true);
+    setUser(res.data.user);
+    localStorage.setItem('access_token', res.data.access_token);
+    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+
+    message.success('Đăng nhập Google thành công');
+
+    switch (role._id) {
+      case ADMIN_ROLE_ID:
+        navigate('/admin');
+        break;
+      case CHEF_ROLE_ID:
+        navigate('/chef');
+        break;
+      case STAFF_ROLE_ID:
+        navigate('/staff');
+        break;
+      default:
+        navigate('/');
+        break;
+    }
+  };
 
   const loginWithGoogle = useGoogleLogin({
     flow: 'implicit',
@@ -34,48 +81,28 @@ export const LoginPage = () => {
         );
         const data = googleRes?.data;
 
-        const payload = {
+        const dataUser = {
           email: data.email,
           name: data.name,
           avatar: data.picture,
           googleId: data.sub,
         };
 
-        const res = await loginWithGoogleAPI(payload);
+        setGoogleUser({
+          email: data.email,
+          name: data.name,
+          avatar: data.picture,
+          googleId: data.sub,
+        });
 
-        const role = res.data.user.role;
-        const userInfo = {
-          userId: res.data.user._id,
-          name: res.data.user.name,
-          isGuest: false,
-        };
-        setIsAuthenticated(true);
-        setUser(res.data.user as any);
-        localStorage.setItem('access_token', res.data.access_token);
-        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+        const checkPhoneRes = await handleCheckedPhoneAPI(data.email);
 
-        message.success('Đăng nhập Google thành công');
-
-        const redirectUrl = searchParams.get('redirect');
-        if (redirectUrl) {
-          navigate(decodeURIComponent(redirectUrl), { replace: true });
+        if (!checkPhoneRes.data.phone) {
+          setOpenModal(true);
           return;
         }
 
-        switch (role._id) {
-          case ADMIN_ROLE_ID:
-            navigate('/admin');
-            break;
-          case CHEF_ROLE_ID:
-            navigate('/chef');
-            break;
-          case STAFF_ROLE_ID:
-            navigate('/staff');
-            break;
-          default:
-            navigate('/');
-            break;
-        }
+        await handleLoginWithGoogle(dataUser, checkPhoneRes.data.phone);
       } catch {
         message.error('Đăng nhập Google thất bại');
       } finally {
@@ -144,6 +171,13 @@ export const LoginPage = () => {
     }
   };
 
+  const handlePhoneSubmit = async (phone: string) => {
+    if (!googleUser) return;
+
+    setOpenModal(false);
+    await handleLoginWithGoogle(googleUser, phone);
+  };
+
   const handleRegister = () => {
     navigate('/register');
   };
@@ -193,6 +227,15 @@ export const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+          <div className="flex justify-end">
+            <Button
+              type="link"
+              className="p-0"
+              onClick={() => setOpenForgot(true)}
+            >
+              Quên mật khẩu?
+            </Button>
+          </div>
 
           <Button
             htmlType="submit"
@@ -226,6 +269,13 @@ export const LoginPage = () => {
           </Button>
         </div>
       </Card>
+
+      <PhoneRequiredModal onSubmit={handlePhoneSubmit} open={openModal} />
+
+      <ForgotPasswordModal
+        open={openForgot}
+        onClose={() => setOpenForgot(false)}
+      />
     </div>
   );
 };

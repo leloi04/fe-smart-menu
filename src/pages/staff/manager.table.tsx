@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Users } from 'lucide-react';
-import { Select } from 'antd';
+import { message, Select } from 'antd';
 
 import StaffLayout from '@/components/layout/chef/layouts/StaffLayout';
 import { getAllTableAPI, handleChangeStatusTableAPI } from '@/services/api';
+import { socket } from '@/services/socket';
 
 const STATUS_OPTIONS = [
   { value: 'empty', label: 'Trống' },
@@ -53,11 +54,16 @@ const TableStatusPage = () => {
 
   const updateStatus = async (
     id: string,
-    tableNumber: number,
     oldStatus: string,
     newStatus: string,
   ) => {
-    console.log(`Bàn ${tableNumber} có ${id}: ${oldStatus} → ${newStatus}`);
+    if (oldStatus == 'occupied' && newStatus == 'empty') {
+      message.warning(
+        'Bạn phải chuyển trạng thái bàn về dọn dẹp và dọn bàn trước khi chọn bàn trống!',
+      );
+      return;
+    }
+    socket.emit('clearDataOrder', id);
     await handleChangeStatusTableAPI(id, newStatus);
 
     setTables((prev) =>
@@ -97,10 +103,10 @@ const TableStatusPage = () => {
                   value={table.status}
                   options={STATUS_OPTIONS.map((opt) => ({
                     ...opt,
-                    disabled: opt.value === 'occupied', // ❌ không cho chọn
+                    disabled: opt.value === 'occupied',
                   }))}
                   onChange={(value) =>
-                    updateStatus(table.id, table.number, table.status, value)
+                    updateStatus(table.id, table.status, value)
                   }
                   className={`rounded-full text-center font-medium px-3 py-1 w-36 ${
                     BACKGROUND_COLORS[table.status]

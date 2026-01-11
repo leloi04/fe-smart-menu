@@ -51,6 +51,10 @@ export default function PaymentOrderSummary(props: IProps) {
   };
 
   const handlePayment = async (type: string) => {
+    localStorage.setItem(
+      'urlReturn',
+      window.location.pathname + window.location.search,
+    );
     if (type === 'card') {
       setShowCardPopup(true);
     } else if (type === 'bank') {

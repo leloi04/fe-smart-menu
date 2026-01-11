@@ -41,6 +41,21 @@ const registerAPI = (
   });
 };
 
+const sendOtpAPI = (email: string) => {
+  const urlBackend = '/auth/otp/send';
+  return axios.post<IBackendRes<any>>(urlBackend, { value: email });
+};
+
+const verifyOtpAPI = (email: string, otp: string) => {
+  const urlBackend = '/auth/otp/verify';
+  return axios.post<IBackendRes<any>>(urlBackend, { value: email, otp });
+};
+
+const resetPasswordAPI = (value: string, password: string) => {
+  const urlBackend = '/auth/reset-password';
+  return axios.post<IBackendRes<any>>(urlBackend, { value, password });
+};
+
 // File API
 const updateFileAPI = (fileImg: any, folder: string) => {
   const bodyFormData = new FormData();
@@ -89,6 +104,16 @@ const deleteUserAPI = (_id: string) => {
 const updateUserPasswordAPI = (payload: any) => {
   const urlBackend = `/users/update-password`;
   return axios.post<IBackendRes<any>>(urlBackend, payload);
+};
+
+const handleCheckedPhoneAPI = (email: string) => {
+  const urlBackend = `/users/check-phone`;
+  return axios.post<IBackendRes<IUserModal>>(urlBackend, { email });
+};
+
+const handleCheckValidPhoneAPI = (phone: string) => {
+  const urlBackend = `/users/valid-phone`;
+  return axios.post<IBackendRes<IUserModal>>(urlBackend, { phone });
 };
 
 // Order API service
@@ -334,6 +359,11 @@ const handlePaymentSuccess = (id: string) => {
   return axios.post<IBackendRes<any>>(urlBackend, { id });
 };
 
+const handlePaymentFailed = (id: string) => {
+  const urlBackend = `/payments/handle-payment-failed`;
+  return axios.post<IBackendRes<any>>(urlBackend, { id });
+};
+
 const vnpayReturnAPI = () => {
   return axios.post(`/payments/vnpay-return${window.location.search}`);
 };
@@ -530,4 +560,10 @@ export {
   generateShiftsByDateAPI,
   loginWithGoogleAPI,
   fetchPreOrderCancelled,
+  handleCheckedPhoneAPI,
+  handleCheckValidPhoneAPI,
+  handlePaymentFailed,
+  sendOtpAPI,
+  verifyOtpAPI,
+  resetPasswordAPI,
 };
