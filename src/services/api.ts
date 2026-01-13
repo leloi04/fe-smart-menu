@@ -430,6 +430,27 @@ const generateShiftsByDateAPI = (date: string) => {
   return axios.post<IBackendRes<any>>(urlBackend, { date });
 };
 
+// Review API
+const createCommentAPI = (payload: any) => {
+  const urlBackend = `/reviews`;
+  return axios.post<IBackendRes<any>>(urlBackend, payload);
+};
+
+const updateCommentAPI = (id: string, payload: any) => {
+  const urlBackend = `/reviews/${id}`;
+  return axios.patch<IBackendRes<any>>(urlBackend, payload);
+};
+
+const deleteCommentAPI = (id: string) => {
+  const urlBackend = `/reviews/${id}`;
+  return axios.delete<IBackendRes<any>>(urlBackend);
+};
+
+const fetchListCommentAPI = (id: string) => {
+  const urlBackend = `/reviews/comment-list`;
+  return axios.post<IBackendRes<IReview[]>>(urlBackend, { id });
+};
+
 // Summary for Dashboard
 const summaryOrderAPI = (month: string, year: string) => {
   const urlBackend = `/orders/summary`;
@@ -566,4 +587,8 @@ export {
   sendOtpAPI,
   verifyOtpAPI,
   resetPasswordAPI,
+  createCommentAPI,
+  updateCommentAPI,
+  deleteCommentAPI,
+  fetchListCommentAPI,
 };

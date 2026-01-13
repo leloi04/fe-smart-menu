@@ -146,7 +146,14 @@ const ForgotPasswordModal = ({ open, onClose }: any) => {
   };
 
   return (
-    <Modal open={open} onCancel={close} footer={null} width={460} centered>
+    <Modal
+      open={open}
+      onCancel={close}
+      footer={null}
+      width={460}
+      centered
+      maskClosable={false}
+    >
       <div className="px-6 py-8 space-y-6">
         <div className="text-center">
           <h2 className="text-2xl font-bold">Quên mật khẩu</h2>

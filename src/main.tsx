@@ -43,6 +43,7 @@ import { ConfigProvider } from 'antd';
 import viVN from 'antd/locale/vi_VN';
 import RestaurantSettings from './pages/admin/setting';
 import ManagePromotionPage from './pages/admin/manager.promotion';
+import MenuDetailPage from './pages/clients/pre-order/detail.pre-order';
 
 let router = createBrowserRouter([
   {
@@ -66,6 +67,10 @@ let router = createBrowserRouter([
             <PreOrderPage />
           </ProtectedCustomer>
         ),
+      },
+      {
+        path: '/pre-order/:id',
+        element: <MenuDetailPage />,
       },
       {
         path: '/cart',

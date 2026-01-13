@@ -121,6 +121,7 @@ function PreOrderPage() {
           return (
             <div
               key={dish._id}
+              onClick={() => navigator(`/pre-order/${dish._id}`)}
               className={`relative bg-white shadow rounded-xl overflow-hidden transition
           ${isOutOfStock ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-lg'}
         `}
@@ -173,7 +174,8 @@ function PreOrderPage() {
 
                   <button
                     disabled={isOutOfStock}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (isOutOfStock) return;
                       setOpen(true);
                       setDataItem(dish);

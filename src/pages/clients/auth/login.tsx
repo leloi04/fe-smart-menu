@@ -50,6 +50,12 @@ export const LoginPage = () => {
 
     message.success('Đăng nhập Google thành công');
 
+    const redirectUrl = searchParams.get('redirect');
+    if (redirectUrl) {
+      navigate(decodeURIComponent(redirectUrl), { replace: true });
+      return;
+    }
+
     switch (role._id) {
       case ADMIN_ROLE_ID:
         navigate('/admin');

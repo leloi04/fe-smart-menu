@@ -200,6 +200,8 @@ const ManageScheduleTablePage = () => {
 
           const res = await getPreBookedTableUpComingAPI(query);
 
+          console.log(res.data);
+
           const result = res?.data?.result || [];
           const metaApi = res?.data?.meta || {};
 

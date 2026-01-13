@@ -225,4 +225,16 @@ declare global {
       close: string;
     };
   }
+
+  interface IReview {
+    id: string;
+    user: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+    createdBy: {
+      _id: string;
+      email: string;
+    };
+  }
 }
