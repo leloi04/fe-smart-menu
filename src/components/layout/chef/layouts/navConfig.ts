@@ -12,6 +12,7 @@ import {
   SquareMenu,
   Landmark,
   Wallpaper,
+  MessageSquareMore,
 } from 'lucide-react';
 
 export const adminNav = [
@@ -36,6 +37,12 @@ export const adminNav = [
     to: '/admin/promotions',
     icon: Wallpaper,
     label: 'Quản lý promotions',
+  },
+  {
+    id: 'review',
+    to: '/admin/reviews',
+    icon: MessageSquareMore,
+    label: 'Quản lý reviews',
   },
   { id: 'settings', to: '/admin/settings', icon: Settings, label: 'Cài đặt' },
 ];

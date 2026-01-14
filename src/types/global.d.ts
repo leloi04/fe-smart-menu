@@ -237,4 +237,19 @@ declare global {
       email: string;
     };
   }
+
+  interface IReviewModal {
+    _id: string;
+    type: 'item' | 'restaurant';
+    user: string;
+    rating: number;
+    comment: string;
+    isDeleted: boolean;
+    menuItemId?: string;
+    createdAt: string;
+    createdBy: {
+      _id: string;
+      email: string;
+    };
+  }
 }

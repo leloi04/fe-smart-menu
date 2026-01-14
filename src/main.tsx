@@ -44,6 +44,7 @@ import viVN from 'antd/locale/vi_VN';
 import RestaurantSettings from './pages/admin/setting';
 import ManagePromotionPage from './pages/admin/manager.promotion';
 import MenuDetailPage from './pages/clients/pre-order/detail.pre-order';
+import ManageReviewPage from './pages/admin/manager.review';
 
 let router = createBrowserRouter([
   {
@@ -216,6 +217,14 @@ let router = createBrowserRouter([
         element: (
           <ProtectedAdmin>
             <ManagePromotionPage />
+          </ProtectedAdmin>
+        ),
+      },
+      {
+        path: '/admin/reviews',
+        element: (
+          <ProtectedAdmin>
+            <ManageReviewPage />
           </ProtectedAdmin>
         ),
       },

@@ -451,6 +451,16 @@ const fetchListCommentAPI = (id: string) => {
   return axios.post<IBackendRes<IReview[]>>(urlBackend, { id });
 };
 
+const getReviewsAPI = (query: string) => {
+  const urlBackend = `/reviews?${query}`;
+  return axios.get<IBackendRes<any>>(urlBackend);
+};
+
+const deleteReviewAPI = (id: string) => {
+  const urlBackend = `/reviews/${id}`;
+  return axios.delete<IBackendRes<any>>(urlBackend);
+};
+
 // Summary for Dashboard
 const summaryOrderAPI = (month: string, year: string) => {
   const urlBackend = `/orders/summary`;
@@ -591,4 +601,6 @@ export {
   updateCommentAPI,
   deleteCommentAPI,
   fetchListCommentAPI,
+  getReviewsAPI,
+  deleteReviewAPI,
 };

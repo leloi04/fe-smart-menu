@@ -17,9 +17,12 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { useEffect, useState } from 'react';
-import { getAllTableAPI, validateReservationAPI } from '@/services/api';
+import {
+  getAllTableAPI,
+  validateReservationAPI,
+  generateShiftsByDateAPI,
+} from '@/services/api';
 import { socket } from '@/services/socket';
-// import { createReservationAPI } from '@/services/api';
 
 interface IProps {
   openModal: boolean;
@@ -45,6 +48,8 @@ const CreateReservation = ({
   const [isSubmit, setIsSubmit] = useState(false);
   const [form] = Form.useForm<FieldType>();
   const [tables, setTables] = useState<any[]>([]);
+  const [listTime, setListTime] = useState<string[]>([]);
+  const selectedDate = Form.useWatch('date', form);
 
   useEffect(() => {
     const fetchTables = async () => {
@@ -59,6 +64,27 @@ const CreateReservation = ({
     };
     fetchTables();
   }, [openModal]);
+
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    const fetchTimeByDate = async () => {
+      try {
+        const res = await generateShiftsByDateAPI(selectedDate);
+        if (res?.data) {
+          const times = res.data.map((item: any) => item.startTime);
+          setListTime(times);
+
+          form.setFieldsValue({ time: undefined });
+        }
+      } catch (error) {
+        console.error(error);
+        message.error('Không lấy được khung giờ');
+      }
+    };
+
+    fetchTimeByDate();
+  }, [selectedDate]);
 
   const handleCancel = () => {
     setOpenModal(false);
@@ -176,16 +202,12 @@ const CreateReservation = ({
               rules={[{ required: true, message: 'Vui lòng chọn giờ' }]}
             >
               <Select
-                placeholder={'Giờ hẹn!'}
-                options={[
-                  { label: '10:00', value: '10:00' },
-                  { label: '12:00', value: '12:00' },
-                  { label: '14:00', value: '14:00' },
-                  { label: '16:00', value: '16:00' },
-                  { label: '18:00', value: '18:00' },
-                  { label: '18:00', value: '18:00' },
-                  { label: '20:00', value: '20:00' },
-                ]}
+                placeholder="Chọn khung giờ"
+                disabled={!selectedDate}
+                options={listTime.map((time) => ({
+                  label: time,
+                  value: time,
+                }))}
               />
             </Form.Item>
           </Col>
