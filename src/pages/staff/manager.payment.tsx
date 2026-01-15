@@ -3,7 +3,11 @@ import { Table, Button, Modal, Radio, message, Empty } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import StaffLayout from '@/components/layout/chef/layouts/StaffLayout';
 import { formatIdOrder } from '@/utils/helpers';
-import { createPaymnetAPI, fetchOrderUnpaymentAPI } from '@/services/api';
+import {
+  createPaymnetAPI,
+  fetchOrderUnpaymentAPI,
+  handleChangeStatusTableAPI,
+} from '@/services/api';
 
 interface Order {
   id: string;
@@ -55,6 +59,8 @@ export default function StaffPaymentManager() {
           paymentMethod === 'cash' ? 'Tiền mặt' : 'Ngân hàng'
         })`,
       );
+
+      await handleChangeStatusTableAPI(selectedOrder.tableInfo._id, 'cleaning');
 
       setOrders((prev) => prev.filter((o) => o.id !== selectedOrder.id));
 

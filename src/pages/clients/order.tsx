@@ -195,6 +195,8 @@ const OrderPage = () => {
       return (
         <div>
           <MenuOrder
+            setStatusTable={setStatusTable}
+            statusTable={statusTable}
             setStep={setStep}
             setUserInfo={setUserInfo}
             userInfo={userInfo}

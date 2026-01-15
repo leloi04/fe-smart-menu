@@ -37,6 +37,8 @@ interface IProps {
       userId?: string | undefined;
     } | null>
   >;
+  statusTable: string;
+  setStatusTable: (v: string) => void;
 }
 
 type OrderItem = {
@@ -47,7 +49,15 @@ type OrderItem = {
 };
 
 const MenuOrder = (props: IProps) => {
-  const { currentOrderId, tableData, userInfo, setStep, setUserInfo } = props;
+  const {
+    currentOrderId,
+    tableData,
+    userInfo,
+    setStep,
+    setUserInfo,
+    setStatusTable,
+    statusTable,
+  } = props;
   const [open, setOpen] = useState<boolean>(false);
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [orders, setOrders] = useState<Record<string, OrderItem>>({});
@@ -138,6 +148,9 @@ const MenuOrder = (props: IProps) => {
         message.info('Order của bạn đã bị hủy. Vui lòng gọi món lại.');
       } else if (status === 'processing') {
         message.success('Order của bạn đang được xử lý!');
+      } else if (status === 'cleaning') {
+        message.success('Bàn của bạn đã xong hẹn gặp lại bạn ở lần sau!');
+        setStatusTable('cleaning');
       }
     });
     socket.on('currentOrderProcessing', (status) => setProgressStatus(status));
