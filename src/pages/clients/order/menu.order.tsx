@@ -56,7 +56,6 @@ const MenuOrder = (props: IProps) => {
     setStep,
     setUserInfo,
     setStatusTable,
-    statusTable,
   } = props;
   const [open, setOpen] = useState<boolean>(false);
   const [menu, setMenu] = useState<MenuItem[]>([]);
