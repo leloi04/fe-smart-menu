@@ -48,6 +48,7 @@ export default function HomePage() {
     const fetchPromotion = async () => {
       const res = await getActivePromotionsAPI();
       if (res.data) {
+        console.log(res.data);
         const dataMap = res.data.map((s: any) => {
           return {
             id: s._id,
