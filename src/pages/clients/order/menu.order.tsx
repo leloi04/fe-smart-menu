@@ -52,7 +52,7 @@ const MenuOrder = (props: IProps) => {
   const {
     currentOrderId,
     tableData,
-    userInfo,
+    userInfo, 
     setStep,
     setUserInfo,
     setStatusTable,

@@ -122,7 +122,7 @@ const RestaurantSettings: React.FC = () => {
           setOpeningHours((prev) => ({
             ...prev,
             weekday: {
-              enabled: data.weekday.enabled ?? prev.weekday.enabled,
+              enabled: data.weekday?.enabled ?? prev.weekday?.enabled,
               open: data.weekday.open
                 ? dayjs(data.weekday.open, 'HH:mm')
                 : prev.weekday.open,
@@ -137,7 +137,7 @@ const RestaurantSettings: React.FC = () => {
           setOpeningHours((prev) => ({
             ...prev,
             weekend: {
-              enabled: data.weekend.enabled ?? prev.weekend.enabled,
+              enabled: data.weekend?.enabled ?? prev.weekend?.enabled,
               open: data.weekend.open
                 ? dayjs(data.weekend.open, 'HH:mm')
                 : prev.weekend.open,
@@ -240,12 +240,12 @@ const RestaurantSettings: React.FC = () => {
         ...restaurantInfo,
         logo: logoImage,
         weekday: {
-          enabled: openingHours.weekday.enabled,
+          enabled: openingHours.weekday?.enabled,
           open: openingHours.weekday.open?.format('HH:mm') ?? null,
           close: openingHours.weekday.close?.format('HH:mm') ?? null,
         },
         weekend: {
-          enabled: openingHours.weekend.enabled,
+          enabled: openingHours.weekend?.enabled,
           open: openingHours.weekend.open?.format('HH:mm') ?? null,
           close: openingHours.weekend.close?.format('HH:mm') ?? null,
         },
@@ -352,7 +352,7 @@ const RestaurantSettings: React.FC = () => {
                 {type === 'weekday' ? 'Thứ 2 – Thứ 6' : 'Thứ 7 – Chủ nhật'}
               </strong>
               <Switch
-                checked={openingHours[type].enabled}
+                checked={openingHours[type]?.enabled}
                 onChange={(v) => updateOpening(type, 'enabled', v)}
               />
             </div>
@@ -361,13 +361,13 @@ const RestaurantSettings: React.FC = () => {
               <TimePicker
                 format="HH:mm"
                 value={openingHours[type].open}
-                disabled={!openingHours[type].enabled}
+                disabled={!openingHours[type]?.enabled}
                 onChange={(v) => updateOpening(type, 'open', v)}
               />
               <TimePicker
                 format="HH:mm"
                 value={openingHours[type].close}
-                disabled={!openingHours[type].enabled}
+                disabled={!openingHours[type]?.enabled}
                 onChange={(v) => updateOpening(type, 'close', v)}
               />
             </div>

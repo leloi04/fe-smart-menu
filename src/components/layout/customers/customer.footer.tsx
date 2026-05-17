@@ -65,7 +65,7 @@ function AppFooter() {
               <div className="flex justify-between">
                 <span>Thứ 2 - Thứ 6:</span>
                 <span className="text-white">
-                  {infoWeb?.weekday.enabled
+                  {infoWeb?.weekday?.enabled
                     ? `${infoWeb.weekday.open} - ${infoWeb.weekday.open}`
                     : '10:00 - 22:00'}
                 </span>
@@ -73,7 +73,7 @@ function AppFooter() {
               <div className="flex justify-between">
                 <span>Thứ 7 - Chủ nhật:</span>
                 <span className="text-white">
-                  {infoWeb?.weekend.enabled
+                  {infoWeb?.weekend?.enabled
                     ? `${infoWeb.weekend.open} - ${infoWeb.weekend.open}`
                     : '9:00 - 23:00'}
                 </span>
